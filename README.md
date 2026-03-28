@@ -1,16 +1,43 @@
-# Roomly (RentBuddy) 🏡
+# 🏡 Welcome to Roomly (RentBuddy)
 
-Roomly is a platform designed to simplify the search for student housing. 
+Hi there! Welcome to **Roomly**, a passion project built to solve a struggle many students face: finding the perfect place to live during university. 
 
-Finding the right place to live while studying can be stressful. Roomly solves this by helping university students discover available, affordable, and secure renting places and university homes near their specific campuses.
+As students, we know how stressful and overwhelming it can be to hunt for apartments or dorms that are safe, affordable, and close to campus. We designed Roomly so that other students can skip the headache and find their ideal home with total peace of mind.
 
-## Our Mission
+## 🌟 Why We Built Roomly
 
-Our primary goal is to create a seamless and trustworthy environment for students to find their next home. We focus on connecting students with legitimate housing options so they can focus on their education rather than worrying about their living situation.
+We wanted to create a platform that feels like a breath of fresh air. No cluttered listings or confusing forms. Just a clean, beautiful space focusing on what really matters to a student.
 
-## Key Focus Areas
+Our platform highlights:
+* **Verified Landlords:** So you always know exactly who you are renting from.
+* **Student Budgets:** Easy ways to filter places that actually fit a student lifestyle.
+* **Campus Proximity:** Quickly see what is within walking distance of your classes.
+* **Secure Contracts:** Keeping everything safe and official for your peace of mind.
 
-* **Verified Landlords:** We ensure that housing listings come from trusted and verified sources.
-* **Secure Contracts:** Providing peace of mind for secure, long term stays.
-* **Student Specific Filters:** Making it effortless to find accommodations that fit strict student budgets and unique lifestyles.
-* **Campus Proximity:** Highlighting locations that make the daily commute to university classes quick and simple.
+## 🚀 How to Try It Out (Pull the Code)
+
+If you want to pull this project and see it running on your own computer, it is super easy! Just follow these simple steps:
+
+**1. Download the project to your computer**
+Open up your terminal or command prompt and type this to fetch the files:
+```bash
+git clone https://github.com/YlanDainne/Roomly.git
+cd Roomly/roomly
+```
+
+**2. Get everything ready**
+Next, tell your computer to prepare all the necessary pieces to run it:
+```bash
+npm install
+```
+
+**3. Launch the app!**
+Finally, start up the application:
+```bash
+npm start
+```
+
+*Your web browser will automatically open up and you can click around and explore Roomly yourself!*
+
+***
+*Created with love and lots of coffee by a student, for students.*
