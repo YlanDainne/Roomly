@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css';
 import { 
@@ -14,7 +14,10 @@ import {
   Bed,
   Bath,
   Maximize,
-  X
+  X,
+  User,
+  Settings,
+  LogOut
 } from 'lucide-react';
 
 const properties = [
@@ -50,9 +53,49 @@ const properties = [
   }
 ];
 
+const notifications = [
+  {
+    id: 1,
+    type: 'contract',
+    title: 'Contract Approved',
+    message: 'Your contract for Talamban Suite has been approved!',
+    time: '2 hours ago',
+    isRead: false
+  },
+  {
+    id: 2,
+    type: 'property',
+    title: 'New Property Available',
+    message: 'A new boarding house near USC is now available.',
+    time: '1 day ago',
+    isRead: false
+  },
+  {
+    id: 3,
+    type: 'reminder',
+    title: 'Payment Reminder',
+    message: 'Your monthly rent payment is due in 3 days.',
+    time: '2 days ago',
+    isRead: true
+  },
+  {
+    id: 4,
+    type: 'system',
+    title: 'Welcome to RentBuddy',
+    message: 'Thanks for joining! Start exploring properties near your campus.',
+    time: '1 week ago',
+    isRead: true
+  }
+];
+
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const notificationRef = useRef(null);
+  const profileRef = useRef(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
   const [listingForm, setListingForm] = useState({
     propertyName: '',
     city: 'Cebu City',
@@ -64,6 +107,23 @@ const DashboardPage = () => {
     amenities: '',
     description: ''
   });
+
+  // Handle clicking outside dropdowns to close them
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setIsNotificationDropdownOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleOpenPostModal = () => {
     setIsPostModalOpen(true);
@@ -92,6 +152,32 @@ const DashboardPage = () => {
       amenities: '',
       description: ''
     });
+  };
+
+  const handleLogoutClick = () => {
+    setIsProfileDropdownOpen(false);
+    setIsLogoutConfirmOpen(true);
+  };
+
+  const handleConfirmLogout = () => {
+    // Add your logout logic here (clear tokens, redirect to login, etc.)
+    console.log('User logged out');
+    // For now, just navigate to login page
+    navigate('/login');
+  };
+
+  const handleCancelLogout = () => {
+    setIsLogoutConfirmOpen(false);
+  };
+
+  const handleNotificationClick = () => {
+    setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
+    setIsProfileDropdownOpen(false); // Close profile dropdown if open
+  };
+
+  const handleMarkAsRead = (notificationId) => {
+    // In a real app, this would update the notification status
+    console.log('Marking notification as read:', notificationId);
   };
 
   return (
@@ -147,9 +233,84 @@ const DashboardPage = () => {
           
           <div className="header-actions">
             <button className="icon-btn"><Heart size={18}/></button>
-            <button className="icon-btn"><Bell size={18}/></button>
-            <div className="profile-pic">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" alt="User Profile" />
+            <div className="notification-container" ref={notificationRef}>
+              <button className="icon-btn notification-btn" onClick={handleNotificationClick}>
+                <Bell size={18}/>
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className="notification-badge">
+                    {notifications.filter(n => !n.isRead).length}
+                  </span>
+                )}
+              </button>
+              {isNotificationDropdownOpen && (
+                <div className="notification-dropdown">
+                  <div className="notification-header">
+                    <h3>Notifications</h3>
+                    <span className="notification-count">
+                      {notifications.filter(n => !n.isRead).length} new
+                    </span>
+                  </div>
+                  <div className="notification-list">
+                    {notifications.map((notification) => (
+                      <div 
+                        key={notification.id} 
+                        className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
+                        onClick={() => handleMarkAsRead(notification.id)}
+                      >
+                        <div className="notification-icon">
+                          {notification.type === 'contract' && <FileText size={16} />}
+                          {notification.type === 'property' && <Home size={16} />}
+                          {notification.type === 'reminder' && <Bell size={16} />}
+                          {notification.type === 'system' && <Settings size={16} />}
+                        </div>
+                        <div className="notification-content">
+                          <div className="notification-title">{notification.title}</div>
+                          <div className="notification-message">{notification.message}</div>
+                          <div className="notification-time">{notification.time}</div>
+                        </div>
+                        {!notification.isRead && <div className="notification-dot"></div>}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="notification-footer">
+                    <button className="view-all-btn">View All Notifications</button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="profile-container" ref={profileRef}>
+              <button 
+                className="profile-pic"
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                type="button"
+              >
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" alt="User Profile" />
+              </button>
+              {isProfileDropdownOpen && (
+                <div className="profile-dropdown">
+                  <div className="profile-dropdown-header">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" alt="User Profile" />
+                    <div>
+                      <p className="profile-name">John Doe</p>
+                      <p className="profile-email">john.doe@example.com</p>
+                    </div>
+                  </div>
+                  <div className="profile-dropdown-divider"></div>
+                  <button className="profile-dropdown-item">
+                    <User size={16} />
+                    <span>View Profile</span>
+                  </button>
+                  <button className="profile-dropdown-item">
+                    <Settings size={16} />
+                    <span>Settings</span>
+                  </button>
+                  <div className="profile-dropdown-divider"></div>
+                  <button className="profile-dropdown-item logout-btn" onClick={handleLogoutClick}>
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -384,6 +545,34 @@ const DashboardPage = () => {
                 <button type="submit" className="solid-btn">Submit Listing</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isLogoutConfirmOpen && (
+        <div className="logout-confirm-overlay" role="presentation" onClick={handleCancelLogout}>
+          <div
+            className="logout-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-confirm-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="logout-confirm-header">
+              <div>
+                <h2 id="logout-confirm-title">Confirm Logout</h2>
+                <p>Are you sure you want to log out of your account?</p>
+              </div>
+            </div>
+
+            <div className="logout-confirm-actions">
+              <button type="button" className="outline-btn" onClick={handleCancelLogout}>
+                Cancel
+              </button>
+              <button type="button" className="logout-confirm-btn" onClick={handleConfirmLogout}>
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       )}
