@@ -1,8 +1,16 @@
 import { render, screen } from '@testing-library/react';
-import App from './App';
+jest.mock(
+  'react-router-dom',
+  () => ({
+    useNavigate: () => jest.fn()
+  }),
+  { virtual: true }
+);
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+import LandingPage from './pages/LandingPage';
+
+test('renders the landing page', () => {
+  render(<LandingPage />);
+
+  expect(screen.getByRole('button', { name: /start searching/i })).toBeInTheDocument();
 });

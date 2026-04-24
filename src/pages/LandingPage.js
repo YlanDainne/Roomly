@@ -106,7 +106,7 @@ const LandingPage = () => {
             <p className="section-tag">About Us</p>
             <h3>Built for students who need confident housing decisions.</h3>
             <p>
-              RentBuddy helps university renters compare verified long-term options without the noise.
+              RentBuddy helps university renters compare verified long term options without the noise.
               We focus on trust signals, clear contract details, and neighborhood context that students
               and parents actually care about.
             </p>
