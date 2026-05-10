@@ -7,6 +7,14 @@ jest.mock(
   { virtual: true }
 );
 
+jest.mock('./context/AuthContext', () => ({
+  useAuth: () => ({
+    session: null,
+    loading: false,
+    supabaseConfigured: false
+  })
+}));
+
 import LandingPage from './pages/LandingPage';
 
 test('renders the landing page', () => {

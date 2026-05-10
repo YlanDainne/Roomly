@@ -39,6 +39,108 @@
   position: relative;
 }
 
+.input-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.password-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  color: #666;
+  cursor: help;
+  flex: 0 0 auto;
+}
+
+.password-help:hover,
+.password-help:focus-visible {
+  color: #111;
+  background: rgba(17, 17, 17, 0.06);
+  outline: none;
+}
+
+.password-help-tooltip {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 220px;
+  max-width: 280px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #111;
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.password-help-tooltip span {
+  display: block;
+}
+
+.password-help:hover .password-help-tooltip,
+.password-help:focus-visible .password-help-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.password-rules {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f4f4f2;
+  border: 1px solid #e2e2de;
+  color: #5f5f65;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.password-rules-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.password-rules ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.password-rules li + li {
+  margin-top: 4px;
+}
+
+.login-success {
+  color: #1f6b3a;
+  background: #eef8f1;
+  border: 1px solid #cfe8d7;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .input-label {
   font-size: 0.7rem;
   font-weight: 600;
@@ -120,4 +222,138 @@
   font-weight: 500;
   border-bottom: 1px solid #111;
   padding-bottom: 2px;
+}
+
+.auth-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(16, 16, 18, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-popup {
+  position: relative;
+  width: min(520px, 100%);
+  background: #fefefe;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
+}
+
+.auth-popup-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: none;
+  background: transparent;
+  color: #666;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.auth-popup-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #111;
+}
+
+.auth-popup-header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding-right: 34px;
+}
+
+.auth-popup-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: #fcefe9;
+  color: #b54708;
+}
+
+.auth-popup-header h2 {
+  margin: 0 0 6px;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.55rem;
+  color: #111;
+}
+
+.auth-popup-header p,
+.auth-popup-body p {
+  margin: 0;
+  color: #555;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+}
+
+.auth-popup-body {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f7f7f8;
+  border: 1px solid #ececef;
+}
+
+.auth-popup-body h3 {
+  margin: 0 0 8px;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #777;
+}
+
+.auth-popup-actions {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.auth-popup-button {
+  border: none;
+  background: #111;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-popup-button:hover {
+  background: #2a2a2a;
+}
+
+.auth-popup-link {
+  color: #111;
+  font-family: 'Inter', sans-serif;
+  text-decoration: none;
+  border-bottom: 1px solid #111;
+  padding-bottom: 2px;
+}
+
+@media (max-width: 560px) {
+  .auth-popup {
+    padding: 22px;
+  }
+
+  .auth-popup-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .auth-popup-button,
+  .auth-popup-link {
+    width: 100%;
+    text-align: center;
+  }
 }

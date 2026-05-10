@@ -13,6 +13,7 @@ import {
   Clock3,
   CheckCircle2
 } from 'lucide-react';
+import ProfileMenu from '../components/ProfileMenu';
 
 const contracts = [
   {
@@ -82,12 +83,7 @@ const MyContractsPage = () => {
             <button className="icon-btn" aria-label="Notifications">
               <Bell size={18} />
             </button>
-            <div className="profile-pic">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop"
-                alt="User profile"
-              />
-            </div>
+            <ProfileMenu />
           </div>
         </header>
 

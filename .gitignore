@@ -10,6 +10,9 @@
 
 # production
 /build
+/backend/target
+/backend/uploads
+/backend/backend.log
 
 # misc
 .DS_Store

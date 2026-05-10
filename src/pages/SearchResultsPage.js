@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import './SearchResultsPage.css';
 import {
   Home,
@@ -7,180 +7,53 @@ import {
   Heart,
   Bell,
   Funnel,
-  MapPin,
   Bed,
   Bath,
   Maximize,
   Eye,
   Map,
   SlidersHorizontal,
-  ArrowUp
+  ArrowUp,
+  MapPin
 } from 'lucide-react';
-
-const cityOptions = ['Cebu City', 'Mandaue City', 'Lapu-Lapu City'];
-const universityOptions = [
-  'Velez College',
-  'University of San Carlos',
-  'University of Cebu',
-  'Cebu Normal University'
-];
-const neighborhoodOptions = [
-  'Mabolo',
-  'Lahug',
-  'Talamban',
-  'Capitol Site',
-  'Banilad',
-  'Banawa',
-  'Guadalupe',
-  'Apas',
-  'Punta Princesa',
-  'Tisa',
-  'Mambaling',
-  'Camputhaw'
-];
-const amenityOptions = ['High-speed WiFi', 'Air Conditioning', '24/7 Security'];
-
-const listings = [
-  {
-    id: 1,
-    title: 'Velez Boarding House',
-    city: 'Cebu City',
-    neighborhood: 'Lahug',
-    location: 'Capitol Site, Cebu City',
-    university: 'Velez College',
-    price: 8500,
-    maxDistance: 5,
-    walkLabel: '500 m to Velez College',
-    beds: '1 Bed',
-    baths: '1 Bath',
-    size: '15 sqm.',
-    amenities: ['High-speed WiFi', 'Air Conditioning', '24/7 Security'],
-    image:
-      'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 2,
-    title: 'Capitol Student Pad',
-    city: 'Cebu City',
-    neighborhood: 'Capitol Site',
-    location: 'Capitol Site, Cebu City',
-    university: 'Velez College',
-    price: 11500,
-    maxDistance: 9,
-    walkLabel: '750 m to Velez College',
-    beds: '1 Bed',
-    baths: '1 Bath',
-    size: '21 sqm.',
-    amenities: ['High-speed WiFi', 'Air Conditioning', '24/7 Security'],
-    image:
-      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 3,
-    title: 'Mabolo Nest Dorm',
-    city: 'Cebu City',
-    neighborhood: 'Mabolo',
-    location: 'Mabolo, Cebu City',
-    university: 'University of San Carlos',
-    price: 9800,
-    maxDistance: 13,
-    walkLabel: '1.2 km to USC Main',
-    beds: '1 Bed',
-    baths: '1 Bath',
-    size: '18 sqm.',
-    amenities: ['High-speed WiFi', 'Air Conditioning'],
-    image:
-      'https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 4,
-    title: 'Talamban Study Loft',
-    city: 'Cebu City',
-    neighborhood: 'Talamban',
-    location: 'Talamban, Cebu City',
-    university: 'University of San Carlos',
-    price: 7600,
-    maxDistance: 18,
-    walkLabel: '1.8 km to USC Talamban',
-    beds: '1 Bed',
-    baths: '1 Bath',
-    size: '20 sqm.',
-    amenities: ['High-speed WiFi', '24/7 Security'],
-    image:
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 5,
-    title: 'Banilad Haven',
-    city: 'Cebu City',
-    neighborhood: 'Banilad',
-    location: 'Banilad, Cebu City',
-    university: 'Velez College',
-    price: 14000,
-    maxDistance: 8,
-    walkLabel: '650 m to Velez College',
-    beds: '2 Beds',
-    baths: '1 Bath',
-    size: '26 sqm.',
-    amenities: ['High-speed WiFi', '24/7 Security'],
-    image:
-      'https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 6,
-    title: 'Banawa Garden Rooms',
-    city: 'Cebu City',
-    neighborhood: 'Banawa',
-    location: 'Banawa, Cebu City',
-    university: 'University of Cebu',
-    price: 7000,
-    maxDistance: 25,
-    walkLabel: '2.9 km to UC Main',
-    beds: '1 Bed',
-    baths: '1 Bath',
-    size: '17 sqm.',
-    amenities: ['Air Conditioning', '24/7 Security'],
-    image:
-      'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 7,
-    title: 'Mandaue Transit Home',
-    city: 'Mandaue City',
-    neighborhood: 'Subangdaku',
-    location: 'Subangdaku, Mandaue City',
-    university: 'University of Cebu',
-    price: 6900,
-    maxDistance: 22,
-    walkLabel: '4.8 km to UC Main',
-    beds: '1 Bed',
-    baths: '1 Bath',
-    size: '14 sqm.',
-    amenities: ['High-speed WiFi', 'Air Conditioning', '24/7 Security'],
-    image:
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=900&auto=format&fit=crop'
-  }
-];
+import { useRentalData } from '../context/RentalDataContext';
+import CebuMap from '../components/CebuMap';
+import { campusOptions } from '../data/cebuCampuses';
+import { resolveListingImageUrl } from '../lib/listingImageUrl';
+import ProfileMenu from '../components/ProfileMenu';
 
 const createDefaultFilters = () => ({
   query: '',
-  city: 'Cebu City',
-  neighborhoods: ['Mabolo', 'Lahug', 'Talamban', 'Capitol Site'],
-  university: 'Velez College',
-  maxDistance: 15,
-  maxBudget: 12000,
-  amenities: [...amenityOptions]
+  university: 'All Universities',
+  maxDistance: 30,
+  maxBudget: 25000,
+  minBeds: 0,
+  minBaths: 0
 });
 
 const SearchResultsPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { listings, hotspots, toggleSaved, loading, error } = useRentalData();
   const [draftFilters, setDraftFilters] = useState(createDefaultFilters);
   const [appliedFilters, setAppliedFilters] = useState(createDefaultFilters);
-  const [showMoreNeighborhoods, setShowMoreNeighborhoods] = useState(false);
+  const [viewMode, setViewMode] = useState(searchParams.get('view') === 'map' ? 'map' : 'list');
 
-  const visibleNeighborhoods = showMoreNeighborhoods
-    ? neighborhoodOptions
-    : neighborhoodOptions.slice(0, 4);
+  useEffect(() => {
+    const query = searchParams.get('query') || '';
+    const nextViewMode = searchParams.get('view') === 'map' ? 'map' : 'list';
+
+    setDraftFilters((previous) => ({
+      ...previous,
+      query
+    }));
+    setAppliedFilters((previous) => ({
+      ...previous,
+      query
+    }));
+    setViewMode(nextViewMode);
+  }, [location.search, searchParams]);
 
   const filteredListings = useMemo(() => {
     const query = appliedFilters.query.trim().toLowerCase();
@@ -188,42 +61,21 @@ const SearchResultsPage = () => {
     return listings.filter((listing) => {
       const matchesQuery =
         query.length === 0 ||
-        [
-          listing.title,
-          listing.city,
-          listing.neighborhood,
-          listing.location,
-          listing.university,
-          ...listing.amenities
-        ]
+        [listing.title, listing.city, listing.neighborhood, listing.university, listing.description]
+          .filter(Boolean)
           .join(' ')
           .toLowerCase()
           .includes(query);
 
-      const matchesCity = appliedFilters.city === 'All Cities' || listing.city === appliedFilters.city;
-      const matchesNeighborhoods =
-        appliedFilters.neighborhoods.length === 0 ||
-        appliedFilters.neighborhoods.includes(listing.neighborhood);
       const matchesUniversity =
-        appliedFilters.university === 'All Universities' ||
-        listing.university === appliedFilters.university;
-      const matchesDistance = listing.maxDistance <= appliedFilters.maxDistance;
-      const matchesBudget = listing.price <= appliedFilters.maxBudget;
-      const matchesAmenities = appliedFilters.amenities.every((amenity) =>
-        listing.amenities.includes(amenity)
-      );
+        appliedFilters.university === 'All Universities' || listing.university === appliedFilters.university;
+      const matchesBudget = Number(listing.price || 0) <= appliedFilters.maxBudget;
+      const matchesBeds = Number(listing.beds || 0) >= appliedFilters.minBeds;
+      const matchesBaths = Number(listing.baths || 0) >= appliedFilters.minBaths;
 
-      return (
-        matchesQuery &&
-        matchesCity &&
-        matchesNeighborhoods &&
-        matchesUniversity &&
-        matchesDistance &&
-        matchesBudget &&
-        matchesAmenities
-      );
+      return matchesQuery && matchesUniversity && matchesBudget && matchesBeds && matchesBaths;
     });
-  }, [appliedFilters]);
+  }, [appliedFilters, listings]);
 
   const updateDraftFilters = (field, value) => {
     setDraftFilters((previous) => ({
@@ -232,23 +84,7 @@ const SearchResultsPage = () => {
     }));
   };
 
-  const toggleDraftNeighborhood = (neighborhood) => {
-    setDraftFilters((previous) => ({
-      ...previous,
-      neighborhoods: previous.neighborhoods.includes(neighborhood)
-        ? previous.neighborhoods.filter((value) => value !== neighborhood)
-        : [...previous.neighborhoods, neighborhood]
-    }));
-  };
 
-  const toggleDraftAmenity = (amenity) => {
-    setDraftFilters((previous) => ({
-      ...previous,
-      amenities: previous.amenities.includes(amenity)
-        ? previous.amenities.filter((value) => value !== amenity)
-        : [...previous.amenities, amenity]
-    }));
-  };
 
   const handleApplyFilters = () => {
     setAppliedFilters(draftFilters);
@@ -258,18 +94,12 @@ const SearchResultsPage = () => {
     const resetFilters = createDefaultFilters();
     setDraftFilters(resetFilters);
     setAppliedFilters(resetFilters);
-    setShowMoreNeighborhoods(false);
   };
 
   return (
     <div className="search-results-page">
       <header className="results-topbar">
-        <button
-          className="results-brand"
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          aria-label="Go to dashboard"
-        >
+        <button className="results-brand" type="button" onClick={() => navigate('/dashboard')} aria-label="Go to dashboard">
           <div className="results-logo-wrap">
             <Home size={16} />
           </div>
@@ -293,18 +123,13 @@ const SearchResultsPage = () => {
         </div>
 
         <div className="results-actions">
-          <button className="icon-btn" aria-label="Saved homes">
+          <button className="icon-btn" type="button" aria-label="Saved homes" onClick={() => navigate('/saved-homes')}>
             <Heart size={18} />
           </button>
-          <button className="icon-btn" aria-label="Notifications">
+          <button className="icon-btn" type="button" aria-label="Notifications">
             <Bell size={18} />
           </button>
-          <div className="profile-pic">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop"
-              alt="User profile"
-            />
-          </div>
+          <ProfileMenu />
         </div>
       </header>
 
@@ -320,48 +145,6 @@ const SearchResultsPage = () => {
           </div>
 
           <section className="filter-block">
-            <h3>Location</h3>
-            <label className="filter-label">City</label>
-            <div className="chip-input">
-              <MapPin size={14} />
-              <select
-                className="filter-select"
-                aria-label="City"
-                value={draftFilters.city}
-                onChange={(event) => updateDraftFilters('city', event.target.value)}
-              >
-                <option value="All Cities">All Cities</option>
-                {cityOptions.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <label className="filter-label">Neighborhoods</label>
-            <div className="check-list">
-              {visibleNeighborhoods.map((name) => (
-                <label key={name} className="check-item">
-                  <input
-                    type="checkbox"
-                    checked={draftFilters.neighborhoods.includes(name)}
-                    onChange={() => toggleDraftNeighborhood(name)}
-                  />
-                  <span>{name}</span>
-                </label>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="show-more-btn"
-              onClick={() => setShowMoreNeighborhoods((previous) => !previous)}
-            >
-              {showMoreNeighborhoods ? '- Show less' : '+ Show 8 more'}
-            </button>
-          </section>
-
-          <section className="filter-block">
             <h3>Academic Proximity</h3>
             <label className="filter-label">Preferred University</label>
             <select
@@ -371,15 +154,17 @@ const SearchResultsPage = () => {
               onChange={(event) => updateDraftFilters('university', event.target.value)}
             >
               <option value="All Universities">All Universities</option>
-              {universityOptions.map((university) => (
-                <option key={university} value={university}>
-                  {university}
-                </option>
-              ))}
+              {campusOptions
+                .filter((campus) => campus !== 'All Universities')
+                .map((campus) => (
+                  <option key={campus} value={campus}>
+                    {campus}
+                  </option>
+                ))}
             </select>
 
             <div className="range-header">
-              <span>Max Distance (walk)</span>
+              <span>Max Distance</span>
               <span className="range-value">{draftFilters.maxDistance} mins</span>
             </div>
             <input
@@ -410,20 +195,32 @@ const SearchResultsPage = () => {
           </section>
 
           <section className="filter-block">
-            <h3>Amenities</h3>
-            <label className="filter-label">Essential Features</label>
-            <div className="check-list">
-              {amenityOptions.map((name) => (
-                <label key={name} className="check-item">
-                  <input
-                    type="checkbox"
-                    checked={draftFilters.amenities.includes(name)}
-                    onChange={() => toggleDraftAmenity(name)}
-                  />
-                  <span>{name}</span>
-                </label>
-              ))}
-            </div>
+            <h3>Rooms</h3>
+            
+            <label className="filter-label" style={{ marginTop: '10px', display: 'block' }}>Minimum Bedrooms</label>
+            <select
+              className="select-field"
+              value={draftFilters.minBeds}
+              onChange={(event) => updateDraftFilters('minBeds', Number(event.target.value))}
+            >
+              <option value="0">Any</option>
+              <option value="1">1+ Beds</option>
+              <option value="2">2+ Beds</option>
+              <option value="3">3+ Beds</option>
+              <option value="4">4+ Beds</option>
+            </select>
+
+            <label className="filter-label" style={{ marginTop: '20px', display: 'block' }}>Minimum Bathrooms</label>
+            <select
+              className="select-field"
+              value={draftFilters.minBaths}
+              onChange={(event) => updateDraftFilters('minBaths', Number(event.target.value))}
+            >
+              <option value="0">Any</option>
+              <option value="1">1+ Baths</option>
+              <option value="2">2+ Baths</option>
+              <option value="3">3+ Baths</option>
+            </select>
           </section>
 
           <button type="button" className="apply-filters-btn" onClick={handleApplyFilters}>
@@ -434,78 +231,189 @@ const SearchResultsPage = () => {
         <main className="results-main">
           <div className="results-headline-row">
             <div>
-              <h1>Student Homes in Cebu City</h1>
+              <h1>Student Homes Near Cebu Campuses</h1>
               <p>
-                Showing {filteredListings.length} verified listing
-                {filteredListings.length === 1 ? '' : 's'} near your selected campus
+                Showing {filteredListings.length} verified listing{filteredListings.length === 1 ? '' : 's'} near your selected campus
               </p>
             </div>
 
             <div className="view-switcher">
-              <button className="view-btn active">
+              <button className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} type="button" onClick={() => setViewMode('list')}>
                 <SlidersHorizontal size={14} /> List View
               </button>
-              <button className="view-btn">
+              <button className={`view-btn ${viewMode === 'map' ? 'active' : ''}`} type="button" onClick={() => setViewMode('map')}>
                 <Map size={14} /> Map View
               </button>
             </div>
           </div>
 
-          <section className="map-card" aria-label="Map placeholder" />
+          {viewMode === 'map' ? (
+            <>
+              <section className="map-card results-map-card" aria-label="Map of Cebu rental locations">
+                <CebuMap listings={filteredListings} hotspots={hotspots} />
+              </section>
 
-          <section className="results-listing-section" id="results-listings">
-            <h2>{filteredListings.length > 0 ? 'Top Recommendations' : 'No Results Found'}</h2>
+              <section className="results-listing-section">
+                <div className="section-header-row">
+                  <h2>{filteredListings.length > 0 ? 'Listings in this area' : 'No Results Found'}</h2>
+                  <span className="results-hint">Use the markers to inspect each Cebu location.</span>
+                </div>
 
-            {filteredListings.length > 0 ? (
-              filteredListings.map((listing) => (
-                <article key={listing.id} className="results-listing-card">
-                  <img src={listing.image} alt={listing.title} />
+                {filteredListings.length > 0 ? (
+                  <div className="results-listing-grid">
+                    {filteredListings.map((listing) => (
+                      <article key={listing.id} className="results-listing-card results-listing-card--compact">
+                        <div className="listing-card-image-shell">
+                          {listing.imageUrls && listing.imageUrls[0] ? (
+                            <img src={resolveListingImageUrl(listing.imageUrls[0])} alt={listing.title} />
+                          ) : (
+                            <div className="listing-card-fallback">No image yet</div>
+                          )}
+                          <button
+                            className={`listing-save-btn ${listing.saved ? 'saved' : ''}`}
+                            type="button"
+                            onClick={() => toggleSaved(listing)}
+                            aria-label={listing.saved ? 'Remove from saved homes' : 'Save listing'}
+                          >
+                            <Heart size={14} fill={listing.saved ? 'currentColor' : 'none'} />
+                          </button>
+                        </div>
 
-                  <div className="results-listing-content">
-                    <div className="listing-top-row">
-                      <div>
-                        <span className="location-badge">{listing.location}</span>
-                        <h3>{listing.title}</h3>
-                        <div className="mini-specs">
-                          <span>
-                            <Bed size={13} /> {listing.beds}
+                        <div className="results-listing-content">
+                          <div className="listing-top-row">
+                            <div>
+                              <span className="location-badge">
+                                {listing.neighborhood}, {listing.city}
+                              </span>
+                              <h3>{listing.title}</h3>
+                              <div className="mini-specs">
+                                <span>
+                                  <Bed size={13} /> {listing.beds} Bed
+                                </span>
+                                <span>
+                                  <Bath size={13} /> {listing.baths} Bath
+                                </span>
+                                <span>
+                                  <Maximize size={13} /> {listing.sizeSqm} sqm.
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="listing-price-right">
+                              <strong>₱ {Number(listing.price).toLocaleString()}</strong>
+                              <small>/month</small>
+                            </div>
+                          </div>
+
+                          <div className="listing-bottom-row">
+                            <span className="distance-text">
+                              <MapPin size={13} /> {listing.university}
+                            </span>
+
+                            <button className="details-link-btn" type="button" onClick={() => navigate(`/listing/${listing.id}`)}>
+                              <Eye size={14} /> View Details <ArrowUp size={12} className="arrow-tilt" />
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-results">
+                    <p>No homes match the selected filters.</p>
+                    <button type="button" className="details-link-btn" onClick={handleClearFilters}>
+                      Reset Filters
+                    </button>
+                  </div>
+                )}
+              </section>
+            </>
+          ) : (
+            <section className="results-listing-section" id="results-listings">
+              <div className="section-header-row">
+                <h2>{filteredListings.length > 0 ? 'Top Recommendations' : 'No Results Found'}</h2>
+                <span className="results-hint">
+                  {hotspots.length > 0 ? `${hotspots.length} Cebu hotspots are active on the map.` : 'No hotspots yet.'}
+                </span>
+              </div>
+
+              {loading ? (
+                <div className="empty-results">
+                  <p>Loading live listings from the backend.</p>
+                </div>
+              ) : error ? (
+                <div className="empty-results">
+                  <p>{error}</p>
+                </div>
+              ) : filteredListings.length > 0 ? (
+                <div className="results-listing-grid">
+                  {filteredListings.map((listing) => (
+                    <article key={listing.id} className="results-listing-card">
+                      <div className="listing-card-image-shell">
+                        {listing.imageUrls && listing.imageUrls[0] ? (
+                          <img src={resolveListingImageUrl(listing.imageUrls[0])} alt={listing.title} />
+                        ) : (
+                          <div className="listing-card-fallback">No image yet</div>
+                        )}
+                        <button
+                          className={`listing-save-btn ${listing.saved ? 'saved' : ''}`}
+                          type="button"
+                          onClick={() => toggleSaved(listing)}
+                          aria-label={listing.saved ? 'Remove from saved homes' : 'Save listing'}
+                        >
+                          <Heart size={14} fill={listing.saved ? 'currentColor' : 'none'} />
+                        </button>
+                      </div>
+
+                      <div className="results-listing-content">
+                        <div className="listing-top-row">
+                          <div>
+                            <span className="location-badge">
+                              {listing.neighborhood}, {listing.city}
+                            </span>
+                            <h3>{listing.title}</h3>
+                            <div className="mini-specs">
+                              <span>
+                                <Bed size={13} /> {listing.beds} Bed
+                              </span>
+                              <span>
+                                <Bath size={13} /> {listing.baths} Bath
+                              </span>
+                              <span>
+                                <Maximize size={13} /> {listing.sizeSqm} sqm.
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="listing-price-right">
+                            <strong>₱ {Number(listing.price).toLocaleString()}</strong>
+                            <small>/month</small>
+                          </div>
+                        </div>
+
+                        <div className="listing-bottom-row">
+                          <span className="distance-text">
+                            <MapPin size={13} /> {listing.university}
                           </span>
-                          <span>
-                            <Bath size={13} /> {listing.baths}
-                          </span>
-                          <span>
-                            <Maximize size={13} /> {listing.size}
-                          </span>
+
+                          <button className="details-link-btn" type="button" onClick={() => navigate(`/listing/${listing.id}`)}>
+                            <Eye size={14} /> View Details <ArrowUp size={12} className="arrow-tilt" />
+                          </button>
                         </div>
                       </div>
-
-                      <div className="listing-price-right">
-                        <strong>₱ {listing.price.toLocaleString()}</strong>
-                        <small>/month</small>
-                      </div>
-                    </div>
-
-                    <div className="listing-bottom-row">
-                      <span className="distance-text">
-                        <MapPin size={13} /> {listing.walkLabel}
-                      </span>
-
-                      <button className="details-link-btn" type="button">
-                        <Eye size={14} /> View Details <ArrowUp size={12} className="arrow-tilt" />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))
-            ) : (
-              <div className="empty-results">
-                <p>No homes match the selected filters.</p>
-                <button type="button" className="details-link-btn" onClick={handleClearFilters}>
-                  Reset Filters
-                </button>
-              </div>
-            )}
-          </section>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-results">
+                  <p>No homes match the selected filters.</p>
+                  <button type="button" className="details-link-btn" onClick={handleClearFilters}>
+                    Reset Filters
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
         </main>
       </div>
     </div>

@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, UserCheck, Search, MapPin } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './LandingPage.css';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const isAnimatingRef = useRef(false);
   const totalSections = 3;
@@ -53,7 +55,9 @@ const LandingPage = () => {
       </div>
 
       <header className="floating-header">
-        <button className="nav-link" onClick={() => navigate('/login')}>Sign In</button>
+        <button className="nav-link" onClick={() => navigate(session ? '/dashboard' : '/login')}>
+          {session ? 'Dashboard' : 'Sign In'}
+        </button>
       </header>
 
       <div
@@ -69,7 +73,7 @@ const LandingPage = () => {
             Find your perfect university home with verified long term contracts.
           </h2>
           
-          <button className="start-btn" onClick={() => navigate('/login')}>
+          <button className="start-btn" onClick={() => navigate(session ? '/dashboard' : '/login')}>
             Start Searching
           </button>
 

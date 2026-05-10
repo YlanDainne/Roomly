@@ -1,0 +1,5 @@
+window.__ROOMLY_RUNTIME_CONFIG__ = {
+  "REACT_APP_SUPABASE_URL": "https://klhgcqoypnxkqnrnbesz.supabase.co",
+  "REACT_APP_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaGdjcW95cG54a3Fucm5iZXN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDI3MTYsImV4cCI6MjA5MzQ3ODcxNn0._wPUO5hdUBxhhWV5YOZLv7lt1RjA_89EiK5JwN-1tSE",
+  "REACT_APP_API_BASE_URL": "http://localhost:8080/api"
+};

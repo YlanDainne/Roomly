@@ -11,44 +11,16 @@ import {
   MapPin,
   Bed,
   Bath,
-  Maximize
+  Maximize,
+  ArrowUpRight
 } from 'lucide-react';
-
-const savedProperties = [
-  {
-    id: 1,
-    name: 'Velez Boarding House',
-    location: 'Capitol Site, Cebu City',
-    price: '₱ 8,500/mo',
-    beds: 1,
-    baths: 1,
-    sqm: 15,
-    image: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 2,
-    name: 'Mabolo Student Flat',
-    location: 'Mabolo, Cebu City',
-    price: '₱ 9,200/mo',
-    beds: 2,
-    baths: 1,
-    sqm: 22,
-    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=900&auto=format&fit=crop'
-  },
-  {
-    id: 3,
-    name: 'Talamban Garden Room',
-    location: 'Talamban, Cebu City',
-    price: '₱ 7,800/mo',
-    beds: 1,
-    baths: 1,
-    sqm: 18,
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1e5250a1df?q=80&w=900&auto=format&fit=crop'
-  }
-];
+import { useRentalData } from '../context/RentalDataContext';
+import { resolveListingImageUrl } from '../lib/listingImageUrl';
+import ProfileMenu from '../components/ProfileMenu';
 
 const SavedHomesPage = () => {
   const navigate = useNavigate();
+  const { savedHomes, toggleSaved } = useRentalData();
 
   return (
     <div className="dashboard-page">
@@ -63,19 +35,19 @@ const SavedHomesPage = () => {
         </button>
 
         <nav className="sidebar-nav">
-          <button className="nav-item" onClick={() => navigate('/dashboard')}>
+          <button className="nav-item" onClick={() => navigate('/dashboard')} type="button">
             <LayoutDashboard size={18} />
             <span>Dashboard</span>
           </button>
-          <button className="nav-item" onClick={() => navigate('/search-results')}>
+          <button className="nav-item" onClick={() => navigate('/search-results')} type="button">
             <Search size={18} />
             <span>Search Results</span>
           </button>
-          <button className="nav-item active">
+          <button className="nav-item active" type="button">
             <Heart size={18} />
             <span>Saved Homes</span>
           </button>
-          <button className="nav-item" onClick={() => navigate('/my-contracts')}>
+          <button className="nav-item" onClick={() => navigate('/my-contracts')} type="button">
             <FileText size={18} />
             <span>My Contracts</span>
           </button>
@@ -90,18 +62,13 @@ const SavedHomesPage = () => {
           </div>
 
           <div className="header-actions">
-            <button className="icon-btn" aria-label="Saved homes">
+            <button className="icon-btn" aria-label="Saved homes" type="button">
               <Heart size={18} />
             </button>
-            <button className="icon-btn" aria-label="Notifications">
+            <button className="icon-btn" aria-label="Notifications" type="button">
               <Bell size={18} />
             </button>
-            <div className="profile-pic">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop"
-                alt="User profile"
-              />
-            </div>
+            <ProfileMenu />
           </div>
         </header>
 
@@ -109,44 +76,67 @@ const SavedHomesPage = () => {
           <div className="dashboard-title-area">
             <div>
               <h1 className="dashboard-title">Saved Homes</h1>
-              <p className="dashboard-subtitle">Your shortlisted student rentals in Cebu City.</p>
+              <p className="dashboard-subtitle">Your saved Cebu rentals will appear here.</p>
             </div>
           </div>
 
           <div className="listings-section">
-            <h3 className="section-title">Favorites Collection</h3>
-
-            <div className="listings-grid">
-              {savedProperties.map((prop) => (
-                <div className="listing-card" key={prop.id}>
-                  <div className="listing-img" style={{ backgroundImage: `url(${prop.image})` }} />
-                  <div className="listing-info">
-                    <div className="listing-header-row">
-                      <h4 className="listing-name">{prop.name}</h4>
-                      <span className="listing-price">{prop.price}</span>
-                    </div>
-
-                    <div className="listing-location">
-                      <MapPin size={14} /> {prop.location}
-                    </div>
-
-                    <div className="listing-specs">
-                      <span>
-                        <Bed size={14} /> {prop.beds} Beds
-                      </span>
-                      <span>
-                        <Bath size={14} /> {prop.baths} Bath
-                      </span>
-                      <span>
-                        <Maximize size={14} /> {prop.sqm} sqm.
-                      </span>
-                    </div>
-
-                    <button className="view-details-btn">View Details</button>
-                  </div>
-                </div>
-              ))}
+            <div className="section-header-row">
+              <h3 className="section-title">Favorites Collection</h3>
+              <button className="view-details-btn" type="button" onClick={() => navigate('/search-results')}>
+                Browse more <ArrowUpRight size={14} />
+              </button>
             </div>
+
+            {savedHomes.length > 0 ? (
+              <div className="listings-grid">
+                {savedHomes.map((listing) => (
+                  <div className="listing-card" key={listing.id}>
+                    <div className="listing-img-wrap">
+                      {listing.imageUrls && listing.imageUrls[0] ? (
+                        <img className="listing-img" src={resolveListingImageUrl(listing.imageUrls[0])} alt={listing.title} />
+                      ) : (
+                        <div className="listing-img listing-img-empty">No image yet</div>
+                      )}
+                      <button className="listing-save-btn saved" type="button" onClick={() => toggleSaved(listing)}>
+                        <Heart size={14} fill="currentColor" />
+                      </button>
+                    </div>
+
+                    <div className="listing-info">
+                      <div className="listing-header-row">
+                        <h4 className="listing-name">{listing.title}</h4>
+                        <span className="listing-price">₱ {Number(listing.price).toLocaleString()}</span>
+                      </div>
+
+                      <div className="listing-location">
+                        <MapPin size={14} /> {listing.neighborhood}, {listing.city}
+                      </div>
+
+                      <div className="listing-specs">
+                        <span>
+                          <Bed size={14} /> {listing.beds} Beds
+                        </span>
+                        <span>
+                          <Bath size={14} /> {listing.baths} Bath
+                        </span>
+                        <span>
+                          <Maximize size={14} /> {listing.sizeSqm} sqm.
+                        </span>
+                      </div>
+
+                      <button className="view-details-btn" type="button" onClick={() => navigate(`/listing/${listing.id}`)}>
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="dashboard-empty-state">
+                No saved homes yet. Tap the heart on any listing to keep it here.
+              </div>
+            )}
           </div>
         </div>
       </main>
