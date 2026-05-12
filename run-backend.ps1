@@ -1,8 +1,11 @@
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$env:JAVA_HOME = 'C:\Users\Matebook D14 BE\.jdk\jdk-21.0.8'
-$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+$jdkPath = 'C:\Users\Matebook D14 BE\.jdk\jdk-21.0.8'
+if (Test-Path $jdkPath) {
+    $env:JAVA_HOME = $jdkPath
+    $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+}
 
 $envFile = Join-Path $repoRoot '.env.local'
 if (Test-Path $envFile) {
@@ -37,7 +40,13 @@ If direct PostgreSQL keeps failing, copy the pooler connection string instead an
     }
 }
 
-$mvn = 'C:\Users\Matebook D14 BE\.maven\maven-3.9.15\bin\mvn.cmd'
+$mvnPath = 'C:\Users\Matebook D14 BE\.maven\maven-3.9.15\bin\mvn.cmd'
+if (Test-Path $mvnPath) {
+    $mvn = $mvnPath
+} else {
+    $mvn = 'mvn.cmd'
+}
+
 Push-Location (Join-Path $repoRoot 'backend')
 try {
     & $mvn spring-boot:run

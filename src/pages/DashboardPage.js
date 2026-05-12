@@ -23,9 +23,10 @@ import {
 } from 'lucide-react';
 import { useRentalData } from '../context/RentalDataContext';
 import { useAuth } from '../context/AuthContext';
-import { campusOptions, getCampusByName } from '../data/cebuCampuses';
+import { campusOptions, getCampusByName, campusCatalog } from '../data/cebuCampuses';
 import { resolveListingImageUrl } from '../lib/listingImageUrl';
 import ProfileMenu from '../components/ProfileMenu';
+import LocationPickerMap from '../components/LocationPickerMap';
 
 const notifications = [
   {
@@ -72,6 +73,8 @@ const createInitialForm = () => ({
   baths: '',
   sizeSqm: '',
   description: '',
+  latitude: '',
+  longitude: '',
   images: []
 });
 
@@ -126,6 +129,10 @@ const DashboardPage = () => {
     formData.append('baths', listingForm.baths);
     formData.append('sizeSqm', listingForm.sizeSqm);
     formData.append('description', listingForm.description);
+    if (listingForm.latitude && listingForm.longitude) {
+      formData.append('latitude', listingForm.latitude);
+      formData.append('longitude', listingForm.longitude);
+    }
 
     listingForm.images.forEach((image) => {
       formData.append('images', image);
@@ -138,6 +145,44 @@ const DashboardPage = () => {
     } catch (submitError) {
       setListingSubmitError(submitError.message || 'Unable to publish listing. Please try again.');
     }
+  };
+
+  const handleLocationSelect = ({ latitude, longitude }) => {
+    // Calculate distance using Haversine formula
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
+
+    let nearestCampus = null;
+    let minDistance = Infinity;
+
+    campusCatalog.forEach(campus => {
+      const dist = getDistance(latitude, longitude, campus.latitude, campus.longitude);
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestCampus = campus;
+      }
+    });
+
+    setListingForm((prev) => {
+      const updates = { latitude, longitude };
+      
+      // Auto-fill blanks if the nearest school is within 5 kilometers
+      if (nearestCampus && minDistance <= 5) {
+        updates.university = nearestCampus.name;
+        updates.city = nearestCampus.city;
+        updates.neighborhood = nearestCampus.neighborhood;
+      }
+      
+      return { ...prev, ...updates };
+    });
   };
 
   const handleExplore = () => {
@@ -177,13 +222,6 @@ const DashboardPage = () => {
             <span>My Contracts</span>
           </button>
         </nav>
-
-        <div className="sidebar-bottom">
-          <button className="post-listing-btn" type="button" onClick={() => setIsPostModalOpen(true)}>
-            <PlusCircle size={18} />
-            <span>Post Listing</span>
-          </button>
-        </div>
       </aside>
 
       <main className="dashboard-content">
@@ -306,107 +344,8 @@ const DashboardPage = () => {
               <div className="stat-number">{hotspots.length}</div>
               <div className="stat-desc">Busy rental areas around Cebu</div>
             </div>
-            <div className="stat-card add-listing-card">
-              <div className="stat-card-header">
-                <span>Post Listing</span>
-                <PlusCircle size={20} className="stat-icon" />
-              </div>
-              <div className="stat-number">Landlords</div>
-              <div className="stat-desc">Add your own Cebu rental and photos</div>
-            </div>
-          </div>
 
-          <section className="listings-section">
-            <div className="section-header-row">
-              <h3 className="section-title">Trending hotspots</h3>
-              <button className="view-details-btn" type="button" onClick={() => navigate('/search-results?view=map')}>
-                View on map <ArrowRight size={14} />
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="dashboard-empty-state">Loading live listings from the backend...</div>
-            ) : topHotspots.length > 0 ? (
-              <div className="hotspot-grid">
-                {topHotspots.map((hotspot) => (
-                  <article key={hotspot.name} className="hotspot-card">
-                    <span className="hotspot-label">{hotspot.type}</span>
-                    <h4>{hotspot.name}</h4>
-                    <p>{hotspot.count} active listing{hotspot.count === 1 ? '' : 's'}</p>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="dashboard-empty-state">
-                No hotspots yet. Add a rental listing to start building the Cebu map.
-              </div>
-            )}
-          </section>
-
-          <section className="listings-section">
-            <div className="section-header-row">
-              <h3 className="section-title">Available Near You</h3>
-              <button className="view-details-btn" type="button" onClick={() => navigate('/search-results')}>
-                Open search results <ArrowRight size={14} />
-              </button>
-            </div>
-
-            {error && <div className="dashboard-empty-state error-state">{error}</div>}
-
-            {listings.length > 0 ? (
-              <div className="listings-grid">
-                {listings.map((listing) => (
-                  <div className="listing-card" key={listing.id}>
-                    <div className="listing-img-wrap">
-                      {listing.imageUrls && listing.imageUrls[0] ? (
-                        <img className="listing-img" src={resolveListingImageUrl(listing.imageUrls[0])} alt={listing.title} />
-                      ) : (
-                        <div className="listing-img listing-img-empty">No image yet</div>
-                      )}
-                      <button
-                        className={`listing-save-btn ${listing.saved ? 'saved' : ''}`}
-                        type="button"
-                        onClick={() => toggleSaved(listing)}
-                        aria-label={listing.saved ? 'Remove from saved homes' : 'Save listing'}
-                      >
-                        <Heart size={14} fill={listing.saved ? 'currentColor' : 'none'} />
-                      </button>
-                    </div>
-                    <div className="listing-info">
-                      <div className="listing-header-row">
-                        <h4 className="listing-name">{listing.title}</h4>
-                        <span className="listing-price">₱ {Number(listing.price).toLocaleString()}</span>
-                      </div>
-
-                      <div className="listing-location">
-                        <MapPin size={14} /> {listing.neighborhood}, {listing.city}
-                      </div>
-
-                      <div className="listing-specs">
-                        <span>
-                          <Bed size={14} /> {listing.beds} Beds
-                        </span>
-                        <span>
-                          <Bath size={14} /> {listing.baths} Bath
-                        </span>
-                        <span>
-                          <Maximize size={14} /> {listing.sizeSqm} sqm.
-                        </span>
-                      </div>
-
-                      <button className="view-details-btn" type="button" onClick={() => navigate(`/listing/${listing.id}`)}>
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="dashboard-empty-state">
-                No listings yet. Use Post Listing to add your first rental place.
-              </div>
-            )}
-          </section>
+        </div>
         </div>
       </main>
 
@@ -541,6 +480,18 @@ const DashboardPage = () => {
                     placeholder="Describe the room, rules, and amenities."
                     value={listingForm.description}
                     onChange={handleListingChange}
+                  />
+                </label>
+
+                <label className="post-field post-field-wide">
+                  <span>Pin Location on Map</span>
+                  <p style={{ fontSize: '0.8rem', color: '#666', marginBottom: '8px' }}>
+                    Click on the map to set the exact location of the property.
+                  </p>
+                  <LocationPickerMap 
+                    latitude={listingForm.latitude} 
+                    longitude={listingForm.longitude} 
+                    onLocationSelect={handleLocationSelect} 
                   />
                 </label>
               </div>

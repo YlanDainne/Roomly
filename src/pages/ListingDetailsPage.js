@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRentalData } from '../context/RentalDataContext';
+import { useAuth } from '../context/AuthContext';
 import ProfileMenu from '../components/ProfileMenu';
+import LocationPickerMap from '../components/LocationPickerMap';
 import { Home, Search, Heart, Bell, MapPin, Bed, Bath, Maximize, ArrowLeft, Mail, User } from 'lucide-react';
 import { resolveListingImageUrl } from '../lib/listingImageUrl';
 import './ListingDetailsPage.css';
@@ -9,7 +11,20 @@ import './ListingDetailsPage.css';
 const ListingDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { listings, toggleSaved } = useRentalData();
+  const { listings, toggleSaved, deleteListing } = useRentalData();
+  const { user } = useAuth();
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this listing?')) {
+      try {
+        await deleteListing(listing.id);
+        navigate('/dashboard');
+      } catch (err) {
+        console.error('Failed to delete listing', err);
+        alert('Failed to delete listing. Please try again.');
+      }
+    }
+  };
 
   const listing = useMemo(() => {
     return listings.find(l => l.id === Number(id));
@@ -117,6 +132,17 @@ const ListingDetailsPage = () => {
             <div className="details-university">
               <strong>Preferred University:</strong> {listing.university}
             </div>
+
+            {listing.latitude && listing.longitude && (
+              <div className="details-map-section" style={{ marginTop: '24px' }}>
+                <h3 style={{ marginBottom: '12px' }}>Exact Location</h3>
+                <LocationPickerMap 
+                  latitude={listing.latitude} 
+                  longitude={listing.longitude} 
+                  readOnly={true} 
+                />
+              </div>
+            )}
           </div>
 
           <div className="landlord-section">
@@ -131,7 +157,14 @@ const ListingDetailsPage = () => {
                   <Mail size={14} /> {listing.landlordEmail || 'No email provided'}
                 </div>
               </div>
-              <button className="solid-btn contact-btn">Contact Landlord</button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+                <button className="solid-btn contact-btn" style={{ flex: 1 }}>Contact Landlord</button>
+                {user && user.email && listing.landlordEmail && user.email.toLowerCase() === listing.landlordEmail.toLowerCase() && (
+                  <button className="outline-btn" style={{ borderColor: '#e63946', color: '#e63946' }} onClick={handleDelete}>
+                    Delete
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { campusCatalog } from '../data/cebuCampuses';
 
 const defaultCenter = [10.3157, 123.8854];
 const baseMapStyle = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
@@ -122,6 +123,8 @@ const CebuMap = ({ listings = [], hotspots = [], center = defaultCenter, zoom = 
           'circle-stroke-width': 1.5
         }
       });
+
+
 
       map.on('click', 'hotspots-core', (event) => {
         const feature = event.features?.[0];

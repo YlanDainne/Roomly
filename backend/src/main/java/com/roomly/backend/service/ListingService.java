@@ -135,9 +135,14 @@ public class ListingService {
     listing.setSizeSqm(request.getSizeSqm());
     listing.setDescription(request.getDescription());
 
-    Campus campus = CampusCatalog.resolve(request);
-    listing.setLatitude(campus.latitude());
-    listing.setLongitude(campus.longitude());
+    if (request.getLatitude() != null && request.getLongitude() != null) {
+      listing.setLatitude(request.getLatitude());
+      listing.setLongitude(request.getLongitude());
+    } else {
+      Campus campus = CampusCatalog.resolve(request);
+      listing.setLatitude(campus.latitude());
+      listing.setLongitude(campus.longitude());
+    }
   }
 
   private void saveImages(Listing listing, MultipartFile[] images) throws IOException {
@@ -213,6 +218,8 @@ public class ListingService {
     request.setBaths(listing.getBaths());
     request.setSizeSqm(listing.getSizeSqm());
     request.setDescription(listing.getDescription());
+    request.setLatitude(listing.getLatitude());
+    request.setLongitude(listing.getLongitude());
     return request;
   }
 }

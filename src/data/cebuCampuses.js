@@ -101,10 +101,10 @@ export const campusCatalog = [
   {
     name: 'Cebu Technological University Main Campus',
     city: 'Cebu City',
-    neighborhood: 'Mabolo',
-    latitude: 10.3029,
-    longitude: 123.9025,
-    hotspotLabel: 'Mabolo / CTU Main'
+    neighborhood: 'San Roque',
+    latitude: 10.2966,
+    longitude: 123.9065,
+    hotspotLabel: 'San Roque / CTU Main'
   },
   {
     name: 'Cebu Normal University',

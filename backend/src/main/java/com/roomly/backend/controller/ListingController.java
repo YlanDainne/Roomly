@@ -53,12 +53,14 @@ public class ListingController {
       @RequestParam Integer baths,
       @RequestParam Double sizeSqm,
       @RequestParam(required = false) String description,
+      @RequestParam(required = false) Double latitude,
+      @RequestParam(required = false) Double longitude,
       @RequestParam(required = false) MultipartFile[] images) throws IOException {
     UUID userId = getCurrentUserId();
     if (userId == null) {
       throw new IllegalArgumentException("User not authenticated");
     }
-    ListingRequest request = buildRequest(title, city, neighborhood, university, price, beds, baths, sizeSqm, description);
+    ListingRequest request = buildRequest(title, city, neighborhood, university, price, beds, baths, sizeSqm, description, latitude, longitude);
     return ResponseEntity.ok(listingService.create(userId, request, images));
   }
 
@@ -74,8 +76,10 @@ public class ListingController {
       @RequestParam Integer baths,
       @RequestParam Double sizeSqm,
       @RequestParam(required = false) String description,
+      @RequestParam(required = false) Double latitude,
+      @RequestParam(required = false) Double longitude,
       @RequestParam(required = false) MultipartFile[] images) throws IOException {
-    ListingRequest request = buildRequest(title, city, neighborhood, university, price, beds, baths, sizeSqm, description);
+    ListingRequest request = buildRequest(title, city, neighborhood, university, price, beds, baths, sizeSqm, description, latitude, longitude);
     return ResponseEntity.ok(listingService.update(id, request, images));
   }
 
@@ -146,7 +150,9 @@ public class ListingController {
       Integer beds,
       Integer baths,
       Double sizeSqm,
-      String description) {
+      String description,
+      Double latitude,
+      Double longitude) {
     ListingRequest request = new ListingRequest();
     request.setTitle(title);
     request.setCity(city);
@@ -157,6 +163,8 @@ public class ListingController {
     request.setBaths(baths);
     request.setSizeSqm(sizeSqm);
     request.setDescription(description);
+    request.setLatitude(latitude);
+    request.setLongitude(longitude);
     return request;
   }
 }
