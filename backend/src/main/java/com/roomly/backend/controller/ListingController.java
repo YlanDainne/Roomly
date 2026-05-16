@@ -154,12 +154,26 @@ public class ListingController {
   }
 
   @GetMapping("/listings/{id}/proposals")
-  public List<com.roomly.backend.entity.ContractProposal> getProposalsForListing(@PathVariable long id) {
+  public ResponseEntity<?> getProposalsForListing(@PathVariable long id) {
     UUID userId = getCurrentUserId();
     if (userId == null) {
-      throw new IllegalArgumentException("User not authenticated");
+      return ResponseEntity.status(401).body("User not authenticated");
     }
-    return listingService.findProposalsForListing(userId, id);
+    try {
+      List<com.roomly.backend.entity.ContractProposal> proposals = listingService.findProposalsForListing(userId, id);
+      return ResponseEntity.ok(proposals);
+    } catch (IllegalArgumentException ex) {
+      String msg = ex.getMessage();
+      if (msg != null && msg.contains("Not authorized")) {
+        return ResponseEntity.status(403).body(msg);
+      }
+      if (msg != null && msg.contains("Listing not found")) {
+        return ResponseEntity.status(404).body(msg);
+      }
+      return ResponseEntity.status(400).body(msg);
+    } catch (Exception ex) {
+      return ResponseEntity.status(500).body("Internal server error");
+    }
   }
 
   @DeleteMapping("/listings/{id}/proposals/{proposalId}")
