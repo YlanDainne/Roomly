@@ -2,8 +2,10 @@ package com.roomly.backend.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import com.roomly.backend.entity.Campus;
+import com.roomly.backend.entity.ContractProposalRequest;
 import com.roomly.backend.entity.HotspotResponse;
 import com.roomly.backend.entity.ListingRequest;
 import com.roomly.backend.entity.ListingResponse;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,12 +37,12 @@ public class ListingController {
 
   @GetMapping("/listings")
   public List<ListingResponse> getListings() {
-    return listingService.findAll();
+    return listingService.findAll(getCurrentUserId());
   }
 
   @GetMapping("/listings/{id}")
   public ResponseEntity<ListingResponse> getListing(@PathVariable long id) {
-    return ResponseEntity.ok(listingService.findById(id));
+    return ResponseEntity.ok(listingService.findById(getCurrentUserId(), id));
   }
 
   @PostMapping(value = "/listings", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -105,7 +108,91 @@ public class ListingController {
       throw new IllegalArgumentException("User not authenticated");
     }
     listingService.saveListing(userId, id);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/listings/{id}/contact")
+  public ResponseEntity<Void> contactLandlord(@PathVariable long id) {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+    listingService.contactLandlord(userId, id);
+    return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/listings/{id}/contract-request")
+  public ResponseEntity<Map<String, String>> submitContractProposal(
+      @PathVariable long id,
+      @RequestBody ContractProposalRequest request) {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+
+    String proposalId = listingService.submitContractProposal(userId, id, request);
+    return ResponseEntity.ok(java.util.Map.of("id", proposalId != null ? proposalId : ""));
+  }
+
+  @GetMapping("/contract-proposals")
+  public List<com.roomly.backend.entity.ContractProposal> getMyContractProposals() {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+    return listingService.findProposalsForUser(userId);
+  }
+
+  @DeleteMapping("/contract-proposals/{proposalId}")
+  public ResponseEntity<Void> deleteContractProposal(@PathVariable String proposalId) {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+    listingService.cancelContractProposalById(userId, proposalId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/listings/{id}/proposals")
+  public List<com.roomly.backend.entity.ContractProposal> getProposalsForListing(@PathVariable long id) {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+    return listingService.findProposalsForListing(userId, id);
+  }
+
+  @DeleteMapping("/listings/{id}/proposals/{proposalId}")
+  public ResponseEntity<Void> deleteProposalAsLandlord(@PathVariable long id, @PathVariable String proposalId) {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+    listingService.rejectContractProposal(userId, id, proposalId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/listings/{id}/proposals/{proposalId}/approve")
+  public ResponseEntity<Void> approveProposal(@PathVariable long id, @PathVariable String proposalId) {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+    listingService.approveContractProposal(userId, id, proposalId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/listings/{id}/contract-request/{proposalId}/cancel")
+  public ResponseEntity<Void> cancelContractProposal(
+      @PathVariable long id,
+      @PathVariable String proposalId) {
+    UUID userId = getCurrentUserId();
+    if (userId == null) {
+      throw new IllegalArgumentException("User not authenticated");
+    }
+
+    listingService.cancelContractProposal(userId, id, proposalId);
+    return ResponseEntity.noContent().build();
   }
 
   @DeleteMapping("/saved-homes/{id}")

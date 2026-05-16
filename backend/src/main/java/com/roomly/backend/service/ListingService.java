@@ -12,11 +12,16 @@ import com.roomly.backend.entity.HotspotResponse;
 import com.roomly.backend.entity.Listing;
 import com.roomly.backend.entity.ListingRequest;
 import com.roomly.backend.entity.ListingResponse;
+import com.roomly.backend.entity.ContractProposalRequest;
 import com.roomly.backend.entity.SavedHome;
 import com.roomly.backend.repository.CampusCatalog;
+import com.roomly.backend.repository.ContractProposalRepository;
+import com.roomly.backend.entity.ContractProposal;
 import com.roomly.backend.repository.ListingRepository;
-import com.roomly.backend.repository.SavedHomesRepository;
 import com.roomly.backend.repository.UserRepository;
+import com.roomly.backend.repository.SavedHomesRepository;
+import com.roomly.backend.repository.NotificationRepository;
+import com.roomly.backend.entity.Notification;
 import com.roomly.backend.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,22 +35,32 @@ public class ListingService {
   private final SavedHomesRepository savedHomesRepository;
   private final SupabaseStorageService supabaseStorageService;
   private final UserRepository userRepository;
+  private final NotificationRepository notificationRepository;
+  private final ContractProposalRepository contractProposalRepository;
 
-  public ListingService(ListingRepository listingRepository, SavedHomesRepository savedHomesRepository, SupabaseStorageService supabaseStorageService, UserRepository userRepository) {
+  public ListingService(ListingRepository listingRepository, SavedHomesRepository savedHomesRepository, SupabaseStorageService supabaseStorageService, UserRepository userRepository, NotificationRepository notificationRepository, ContractProposalRepository contractProposalRepository) {
     this.listingRepository = listingRepository;
     this.savedHomesRepository = savedHomesRepository;
     this.supabaseStorageService = supabaseStorageService;
     this.userRepository = userRepository;
+    this.notificationRepository = notificationRepository;
+    this.contractProposalRepository = contractProposalRepository;
   }
 
   @Transactional(readOnly = true)
-  public List<ListingResponse> findAll() {
-    return listingRepository.findAll().stream().map(this::toResponse).toList();
+  public List<ListingResponse> findAll(UUID userId) {
+    List<Long> savedListingIds = loadSavedListingIds(userId);
+    System.out.println("[DEBUG] findAll - userId: " + userId + ", savedListingIds: " + savedListingIds);
+    return listingRepository.findAll().stream()
+        .map(listing -> toResponse(listing, savedListingIds.contains(listing.getId())))
+        .toList();
   }
 
   @Transactional(readOnly = true)
-  public ListingResponse findById(long id) {
-    return toResponse(requireListing(id));
+  public ListingResponse findById(UUID userId, long id) {
+    Listing listing = requireListing(id);
+    boolean isSaved = userId != null && savedHomesRepository.findByUserIdAndListingId(userId, id).isPresent();
+    return toResponse(listing, isSaved);
   }
 
   public ListingResponse create(UUID landlordId, ListingRequest request, MultipartFile[] images) throws IOException {
@@ -53,7 +68,7 @@ public class ListingService {
     listing.setLandlordId(landlordId);
     applyRequest(listing, request);
     saveImages(listing, images);
-    return toResponse(listingRepository.save(listing));
+    return toResponse(listingRepository.save(listing), false);
   }
 
   public ListingResponse update(long id, ListingRequest request, MultipartFile[] images) throws IOException {
@@ -63,7 +78,7 @@ public class ListingService {
       listing.getImageUrls().clear();
       saveImages(listing, images);
     }
-    return toResponse(listingRepository.save(listing));
+    return toResponse(listingRepository.save(listing), false);
   }
 
   public void delete(long id) {
@@ -74,16 +89,192 @@ public class ListingService {
   public List<ListingResponse> findSavedHomes(UUID userId) {
     return savedHomesRepository.findByUserId(userId).stream()
         .map(sh -> listingRepository.findById(sh.getListingId())
-            .map(this::toResponse)
+        .map(listing -> toResponse(listing, true))
             .orElseThrow(() -> new IllegalArgumentException("Listing not found: " + sh.getListingId())))
         .toList();
   }
 
   public void saveListing(UUID userId, long listingId) {
     Listing listing = requireListing(listingId);
+    System.out.println("[DEBUG] saveListing - userId: " + userId + ", listingId: " + listingId);
     if (savedHomesRepository.findByUserIdAndListingId(userId, listingId).isEmpty()) {
       savedHomesRepository.save(new SavedHome(userId, listingId));
+      System.out.println("[DEBUG] SavedHome saved successfully");
+      
+      if (!userId.equals(listing.getLandlordId())) {
+        User user = userRepository.findById(userId).orElse(null);
+        String userName = user != null && user.getFullName() != null ? user.getFullName() : "A user";
+        String message = userName + " saved your listing: " + listing.getTitle();
+        notificationRepository.save(new Notification(listing.getLandlordId(), message));
+        System.out.println("[DEBUG] Notification saved for landlord: " + listing.getLandlordId());
+      }
     }
+  }
+
+  public void contactLandlord(UUID userId, long listingId) {
+    Listing listing = requireListing(listingId);
+    if (!userId.equals(listing.getLandlordId())) {
+      User user = userRepository.findById(userId).orElse(null);
+      String userName = user != null && user.getFullName() != null ? user.getFullName() : "A user";
+      String userEmail = user != null ? user.getEmail() : "unknown email";
+      String message = userName + " (" + userEmail + ") wants to contact you regarding your listing: " + listing.getTitle();
+      notificationRepository.save(new Notification(listing.getLandlordId(), message));
+    }
+  }
+
+  public String submitContractProposal(UUID userId, long listingId, ContractProposalRequest request) {
+    Listing listing = requireListing(listingId);
+    if (userId.equals(listing.getLandlordId())) {
+      return null;
+    }
+
+    User user = userRepository.findById(userId).orElse(null);
+    String userName = user != null && user.getFullName() != null ? user.getFullName() : "A user";
+    String userEmail = user != null ? user.getEmail() : "unknown email";
+
+    StringBuilder message = new StringBuilder();
+    message.append(userName)
+        .append(" (")
+        .append(userEmail)
+        .append(") submitted an open contract request for your listing: ")
+        .append(listing.getTitle());
+
+    if (request != null) {
+      if (request.proposedPrice() != null && !request.proposedPrice().isBlank()) {
+        message.append(" | Proposed price: ₱ ").append(request.proposedPrice());
+      }
+      if (request.viewingDate() != null && !request.viewingDate().isBlank()) {
+        message.append(" | Viewing date: ").append(request.viewingDate());
+      }
+      if (request.viewingTime() != null && !request.viewingTime().isBlank()) {
+        message.append(" | Viewing time: ").append(request.viewingTime());
+      }
+      if (request.moveInTimeline() != null && !request.moveInTimeline().isBlank()) {
+        message.append(" | Move-in: ").append(request.moveInTimeline());
+      }
+      if (request.message() != null && !request.message().isBlank()) {
+        message.append(" | Message: ").append(request.message());
+      }
+    }
+
+    // persist proposal
+    String proposalId = listingId + "-" + System.currentTimeMillis();
+    ContractProposal proposal = new ContractProposal(
+      proposalId,
+      listingId,
+      userId,
+      listing.getTitle(),
+      listing.getNeighborhood() + ", " + listing.getCity(),
+      request != null && request.proposedPrice() != null && !request.proposedPrice().isBlank() ? Integer.valueOf(request.proposedPrice()) : null,
+      request != null ? request.viewingDate() : null,
+      request != null ? request.viewingTime() : null,
+      request != null ? request.moveInTimeline() : null,
+      request != null ? request.message() : null,
+      "Pending Approval",
+      java.time.OffsetDateTime.now()
+    );
+
+    contractProposalRepository.save(proposal);
+
+    notificationRepository.save(new Notification(listing.getLandlordId(), message.toString(), "proposal", Long.valueOf(listingId)));
+    return proposalId;
+  }
+
+  @Transactional(readOnly = true)
+  public List<com.roomly.backend.entity.ContractProposal> findProposalsForUser(UUID userId) {
+    if (userId == null) return List.of();
+    return contractProposalRepository.findByUserIdOrderByCreatedAtDesc(userId);
+  }
+
+  @Transactional(readOnly = true)
+  public List<com.roomly.backend.entity.ContractProposal> findProposalsForListing(UUID userId, long listingId) {
+    Listing listing = requireListing(listingId);
+    if (!listing.getLandlordId().equals(userId)) {
+      throw new IllegalArgumentException("Not authorized to view proposals for this listing");
+    }
+    return contractProposalRepository.findByListingIdOrderByCreatedAtDesc(listingId);
+  }
+
+  public void approveContractProposal(UUID userId, long listingId, String proposalId) {
+    Listing listing = requireListing(listingId);
+    if (!listing.getLandlordId().equals(userId)) {
+      throw new IllegalArgumentException("Not authorized to approve proposals for this listing");
+    }
+    contractProposalRepository.findById(proposalId).ifPresent(p -> {
+      if (p.getListingId() == listingId) {
+        p.setStatus("Approved");
+        contractProposalRepository.save(p);
+        User proposer = userRepository.findById(p.getUserId()).orElse(null);
+        String proposerName = proposer != null && proposer.getFullName() != null ? proposer.getFullName() : "Landlord";
+
+        String message = proposerName + " approved your contract proposal for listing: " + listing.getTitle();
+        notificationRepository.save(new Notification(p.getUserId(), message, "proposal", Long.valueOf(listingId)));
+      }
+    });
+  }
+
+  public void rejectContractProposal(UUID userId, long listingId, String proposalId) {
+    Listing listing = requireListing(listingId);
+    if (!listing.getLandlordId().equals(userId)) {
+      throw new IllegalArgumentException("Not authorized to reject proposals for this listing");
+    }
+    contractProposalRepository.findById(proposalId).ifPresent(p -> {
+      if (p.getListingId() == listingId) {
+        contractProposalRepository.deleteById(proposalId);
+        User proposer = userRepository.findById(p.getUserId()).orElse(null);
+        String proposerName = proposer != null && proposer.getFullName() != null ? proposer.getFullName() : "Landlord";
+
+        String message = proposerName + " rejected your contract proposal for listing: " + listing.getTitle();
+        notificationRepository.save(new Notification(p.getUserId(), message, "proposal", Long.valueOf(listingId)));
+      }
+    });
+  }
+
+  public void cancelContractProposalById(UUID userId, String proposalId) {
+    contractProposalRepository.findById(proposalId).ifPresent(p -> {
+      if (p.getUserId().equals(userId)) {
+        Listing listing = requireListing(p.getListingId());
+        contractProposalRepository.deleteById(proposalId);
+        User user = userRepository.findById(userId).orElse(null);
+        String userName = user != null && user.getFullName() != null ? user.getFullName() : "A user";
+
+        StringBuilder message = new StringBuilder();
+        message.append(userName)
+            .append(" canceled their contract proposal for your listing: ")
+            .append(listing.getTitle())
+            .append(" (proposal id: ")
+            .append(proposalId)
+            .append(")");
+
+        notificationRepository.save(new Notification(listing.getLandlordId(), message.toString()));
+      }
+    });
+  }
+
+  public void cancelContractProposal(UUID userId, long listingId, String proposalId) {
+    Listing listing = requireListing(listingId);
+    if (userId.equals(listing.getLandlordId())) {
+      return;
+    }
+    // only allow owner of the proposal to cancel
+    contractProposalRepository.findById(proposalId).ifPresent(p -> {
+      if (p.getUserId().equals(userId)) {
+        contractProposalRepository.deleteById(proposalId);
+        User user = userRepository.findById(userId).orElse(null);
+        String userName = user != null && user.getFullName() != null ? user.getFullName() : "A user";
+
+        StringBuilder message = new StringBuilder();
+        message.append(userName)
+            .append(" canceled their contract proposal for your listing: ")
+            .append(listing.getTitle())
+            .append(" (proposal id: ")
+            .append(proposalId)
+            .append(")");
+
+        notificationRepository.save(new Notification(listing.getLandlordId(), message.toString()));
+        System.out.println("[DEBUG] cancelContractProposal - user: " + userId + " listing: " + listingId + " proposalId: " + proposalId);
+      }
+    });
   }
 
   public void unsaveListing(UUID userId, long listingId) {
@@ -161,7 +352,7 @@ public class ListingService {
     }
   }
 
-  private ListingResponse toResponse(Listing listing) {
+  private ListingResponse toResponse(Listing listing, boolean saved) {
     User landlord = userRepository.findById(listing.getLandlordId()).orElse(null);
     String landlordName = "Unknown Landlord";
     String landlordEmail = "No email provided";
@@ -201,11 +392,21 @@ public class ListingService {
         listing.getLatitude(),
         listing.getLongitude(),
         new ArrayList<>(listing.getImageUrls()),
-        false,
+          saved,
         CampusCatalog.resolve(toRequest(listing)).hotspotLabel(),
         landlordName,
         landlordEmail);
   }
+
+        private List<Long> loadSavedListingIds(UUID userId) {
+          if (userId == null) {
+        return List.of();
+          }
+
+          return savedHomesRepository.findByUserId(userId).stream()
+          .map(SavedHome::getListingId)
+          .toList();
+        }
 
   private ListingRequest toRequest(Listing listing) {
     ListingRequest request = new ListingRequest();

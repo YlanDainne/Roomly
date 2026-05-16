@@ -21,6 +21,7 @@ import CebuMap from '../components/CebuMap';
 import { campusOptions } from '../data/cebuCampuses';
 import { resolveListingImageUrl } from '../lib/listingImageUrl';
 import ProfileMenu from '../components/ProfileMenu';
+import NotificationMenu from '../components/NotificationMenu';
 
 const createDefaultFilters = () => ({
   query: '',
@@ -126,9 +127,7 @@ const SearchResultsPage = () => {
           <button className="icon-btn" type="button" aria-label="Saved homes" onClick={() => navigate('/saved-homes')}>
             <Heart size={18} />
           </button>
-          <button className="icon-btn" type="button" aria-label="Notifications">
-            <Bell size={18} />
-          </button>
+          <NotificationMenu />
           <ProfileMenu />
         </div>
       </header>

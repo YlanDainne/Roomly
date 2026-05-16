@@ -17,6 +17,7 @@ import {
 import { useRentalData } from '../context/RentalDataContext';
 import { resolveListingImageUrl } from '../lib/listingImageUrl';
 import ProfileMenu from '../components/ProfileMenu';
+import NotificationMenu from '../components/NotificationMenu';
 
 const SavedHomesPage = () => {
   const navigate = useNavigate();
@@ -65,9 +66,7 @@ const SavedHomesPage = () => {
             <button className="icon-btn" aria-label="Saved homes" type="button">
               <Heart size={18} />
             </button>
-            <button className="icon-btn" aria-label="Notifications" type="button">
-              <Bell size={18} />
-            </button>
+            <NotificationMenu />
             <ProfileMenu />
           </div>
         </header>

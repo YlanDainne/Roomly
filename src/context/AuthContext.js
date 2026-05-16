@@ -42,6 +42,36 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  // AFK Session Timeout Logic (10 minutes)
+  useEffect(() => {
+    let timeoutId;
+    const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      if (session) {
+        timeoutId = setTimeout(() => {
+          console.log('User has been AFK for 10 minutes. Signing out...');
+          signOut().then(() => {
+            alert('Your session has expired due to inactivity.');
+            window.location.href = '/login';
+          });
+        }, INACTIVITY_TIMEOUT);
+      }
+    };
+
+    if (session) {
+      resetTimer();
+      const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+      events.forEach((event) => window.addEventListener(event, resetTimer));
+
+      return () => {
+        clearTimeout(timeoutId);
+        events.forEach((event) => window.removeEventListener(event, resetTimer));
+      };
+    }
+  }, [session]);
+
   const signIn = async ({ email, password }) => {
     if (!supabase) {
       throw new Error('Supabase auth is not configured.');

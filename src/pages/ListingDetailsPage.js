@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useRentalData } from '../context/RentalDataContext';
 import { useAuth } from '../context/AuthContext';
 import ProfileMenu from '../components/ProfileMenu';
+import NotificationMenu from '../components/NotificationMenu';
 import LocationPickerMap from '../components/LocationPickerMap';
 import { Home, Search, Heart, Bell, MapPin, Bed, Bath, Maximize, ArrowLeft, Mail, User } from 'lucide-react';
 import { resolveListingImageUrl } from '../lib/listingImageUrl';
@@ -55,9 +56,7 @@ const ListingDetailsPage = () => {
           <button className="icon-btn" type="button" onClick={() => navigate('/saved-homes')}>
             <Heart size={18} />
           </button>
-          <button className="icon-btn" type="button">
-            <Bell size={18} />
-          </button>
+          <NotificationMenu />
           <ProfileMenu />
         </div>
       </header>
@@ -158,11 +157,22 @@ const ListingDetailsPage = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                <button className="solid-btn contact-btn" style={{ flex: 1 }}>Contact Landlord</button>
+                <button 
+                  className="solid-btn contact-btn" 
+                  style={{ flex: 1 }} 
+                  onClick={() => navigate(`/contract/${listing.id}`)}
+                >
+                  Open Contract
+                </button>
                 {user && user.email && listing.landlordEmail && user.email.toLowerCase() === listing.landlordEmail.toLowerCase() && (
-                  <button className="outline-btn" style={{ borderColor: '#e63946', color: '#e63946' }} onClick={handleDelete}>
-                    Delete
-                  </button>
+                  <>
+                    <button className="outline-btn" style={{ borderColor: '#e63946', color: '#e63946' }} onClick={handleDelete}>
+                      Delete
+                    </button>
+                    <button className="outline-btn" style={{ marginLeft: 8 }} onClick={() => navigate(`/listing/${listing.id}/proposals`)}>
+                      View Proposals
+                    </button>
+                  </>
                 )}
               </div>
             </div>

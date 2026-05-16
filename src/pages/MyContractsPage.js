@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './MyContractsPage.css';
 import {
   Home,
@@ -11,31 +11,45 @@ import {
   MapPin,
   CalendarDays,
   Clock3,
+  DollarSign,
   CheckCircle2
 } from 'lucide-react';
 import ProfileMenu from '../components/ProfileMenu';
+import { rentalApi } from '../services/rentalApi';
 
-const contracts = [
-  {
-    id: 1,
-    title: 'Talamban Studio Lease',
-    address: 'Talamban, Cebu City',
-    startDate: 'Apr 20, 2026',
-    endDate: 'Apr 19, 2027',
-    status: 'Pending Approval'
-  },
-  {
-    id: 2,
-    title: 'Capitol Site Boarding',
-    address: 'Capitol Site, Cebu City',
-    startDate: 'Jan 10, 2026',
-    endDate: 'Jan 09, 2027',
-    status: 'Active'
-  }
-];
+const CONTRACT_STORAGE_KEY = 'roomly-open-contracts';
 
 const MyContractsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [contracts, setContracts] = useState([]);
+
+  useEffect(() => {
+    const loadContracts = async () => {
+      try {
+        const res = await rentalApi.getMyContractProposals();
+        setContracts(Array.isArray(res) ? res : []);
+      } catch (error) {
+        console.warn('Unable to load contract proposals:', error);
+        setContracts([]);
+      }
+    };
+
+    loadContracts();
+  }, [searchParams]);
+
+  const cancelProposal = async (proposalId) => {
+    const confirmed = window.confirm('Cancel this contract proposal?');
+    if (!confirmed) return;
+
+    try {
+      await rentalApi.deleteContractProposal(proposalId);
+      setContracts((prev) => prev.filter((c) => c.id !== proposalId));
+    } catch (error) {
+      console.error('Failed to cancel proposal:', error);
+      alert(error.message || 'Unable to cancel proposal.');
+    }
+  };
 
   return (
     <div className="dashboard-page">
@@ -96,11 +110,11 @@ const MyContractsPage = () => {
           </div>
 
           <section className="contracts-grid">
-            {contracts.map((item) => (
+            {contracts.length > 0 ? contracts.map((item) => (
               <article className="contract-card" key={item.id}>
                 <div className="contract-top">
                   <div>
-                    <h3>{item.title}</h3>
+                    <h3>{item.listingTitle}</h3>
                     <p>
                       <MapPin size={14} /> {item.address}
                     </p>
@@ -112,19 +126,33 @@ const MyContractsPage = () => {
 
                 <div className="contract-meta">
                   <span>
-                    <CalendarDays size={14} /> Start: {item.startDate}
+                    <DollarSign size={14} /> Proposed price: ₱ {item.proposedPrice ? Number(item.proposedPrice).toLocaleString() : '—'}
                   </span>
                   <span>
-                    <Clock3 size={14} /> End: {item.endDate}
+                    <CalendarDays size={14} /> Viewing date: {item.viewingDate || 'Not set'}
                   </span>
                   <span>
-                    <CheckCircle2 size={14} /> Digital contract ready
+                    <Clock3 size={14} /> Viewing time: {item.viewingTime || 'Not set'}
+                  </span>
+                  <span>
+                    <CheckCircle2 size={14} /> {item.moveInTimeline || 'Timeline not set'}
                   </span>
                 </div>
 
-                <button className="view-details-btn">Open Contract</button>
+                <div className="contract-actions-row">
+                  <button className="view-details-btn" type="button" onClick={() => navigate(`/contract/${item.listingId}`)}>
+                    Open Contract
+                  </button>
+                  <button className="outline-btn danger-btn" type="button" onClick={() => cancelProposal(item.id)}>
+                    Cancel Proposal
+                  </button>
+                </div>
               </article>
-            ))}
+            )) : (
+              <div className="dashboard-empty-state">
+                No open contracts yet. Choose a listing and tap Open Contract to send a proposal.
+              </div>
+            )}
           </section>
         </div>
       </main>

@@ -39,11 +39,30 @@ export const RentalDataProvider = ({ children }) => {
   }, [loadAll]);
 
   const refreshListings = useCallback(async () => {
-    const listingData = await rentalApi.getListings();
-    const hotspotData = await rentalApi.getHotspots();
-    setListings(listingData);
-    setHotspots(hotspotData);
-  }, []);
+    try {
+      const listingData = await rentalApi.getListings();
+      const hotspotData = await rentalApi.getHotspots();
+
+      let mergedListings = Array.isArray(listingData) ? listingData : [];
+
+      // If user is signed in, fetch saved homes and merge saved flags to ensure UI matches user's favorites
+      if (session) {
+        try {
+          const savedData = await rentalApi.getSavedHomes();
+          const savedIds = Array.isArray(savedData) ? savedData.map((s) => s.id) : [];
+          mergedListings = mergedListings.map((l) => ({ ...l, saved: savedIds.includes(l.id) }));
+        } catch (innerErr) {
+          console.warn('Failed to merge saved homes into listings:', innerErr);
+        }
+      }
+
+      setListings(mergedListings);
+      setHotspots(Array.isArray(hotspotData) ? hotspotData : []);
+    } catch (err) {
+      console.error('Error refreshing listings:', err);
+      setError(err.message || 'Failed to refresh listings');
+    }
+  }, [session]);
 
   const refreshSavedHomes = useCallback(async () => {
     if (!session) {
@@ -82,13 +101,45 @@ export const RentalDataProvider = ({ children }) => {
   }, [loadAll]);
 
   const toggleSaved = useCallback(async (listing) => {
-    if (listing.saved) {
-      await rentalApi.unsaveListing(listing.id);
-    } else {
-      await rentalApi.saveListing(listing.id);
+    // Optimistic UI update: flip saved locally first
+    setListings((prev) =>
+      prev.map((l) => (l.id === listing.id ? { ...l, saved: !l.saved } : l))
+    );
+    // Also update savedHomes optimistically so merged state persists
+    setSavedHomes((prev) => {
+      if (listing.saved) {
+        return prev.filter((s) => s.id !== listing.id);
+      }
+      // add listing to savedHomes
+      return [...prev, listing];
+    });
+
+    try {
+      if (listing.saved) {
+        await rentalApi.unsaveListing(listing.id);
+      } else {
+        await rentalApi.saveListing(listing.id);
+      }
+      // Small delay to allow backend processing, then refresh authoritative state
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await refreshListings();
+      await refreshSavedHomes();
+    } catch (err) {
+      console.error('Error toggling saved:', err);
+      setError(err.message || 'Failed to save listing');
+      // Revert optimistic update on error
+      setListings((prev) =>
+        prev.map((l) => (l.id === listing.id ? { ...l, saved: listing.saved } : l))
+      );
+      setSavedHomes((prev) => {
+        if (listing.saved) {
+          // operation was to unsave; revert removal by adding back
+          return [...prev, listing];
+        }
+        // operation was to save; revert add by removing
+        return prev.filter((s) => s.id !== listing.id);
+      });
     }
-    await refreshListings();
-    await refreshSavedHomes();
   }, [refreshListings, refreshSavedHomes]);
 
   const value = useMemo(

@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css';
 import {
+  AlertCircle,
   Home,
   LayoutDashboard,
   Search,
@@ -24,44 +25,11 @@ import {
 import { useRentalData } from '../context/RentalDataContext';
 import { useAuth } from '../context/AuthContext';
 import { campusOptions, getCampusByName, campusCatalog } from '../data/cebuCampuses';
-import { resolveListingImageUrl } from '../lib/listingImageUrl';
 import ProfileMenu from '../components/ProfileMenu';
+import NotificationMenu from '../components/NotificationMenu';
 import LocationPickerMap from '../components/LocationPickerMap';
 
-const notifications = [
-  {
-    id: 1,
-    type: 'contract',
-    title: 'Contract Approved',
-    message: 'Your contract for Talamban Suite has been approved!',
-    time: '2 hours ago',
-    isRead: false
-  },
-  {
-    id: 2,
-    type: 'property',
-    title: 'New Property Available',
-    message: 'A new boarding house near USC is now available.',
-    time: '1 day ago',
-    isRead: false
-  },
-  {
-    id: 3,
-    type: 'reminder',
-    title: 'Payment Reminder',
-    message: 'Your monthly rent payment is due in 3 days.',
-    time: '2 days ago',
-    isRead: true
-  },
-  {
-    id: 4,
-    type: 'system',
-    title: 'Welcome to RentBuddy',
-    message: 'Thanks for joining! Start exploring properties near your campus.',
-    time: '1 week ago',
-    isRead: true
-  }
-];
+
 
 const createInitialForm = () => ({
   title: '',
@@ -83,10 +51,12 @@ const DashboardPage = () => {
   const { signOut, user } = useAuth();
   const { listings, hotspots, createListing, loading, error, toggleSaved } = useRentalData();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
   const [searchPlace, setSearchPlace] = useState('');
   const [listingForm, setListingForm] = useState(createInitialForm);
   const [listingSubmitError, setListingSubmitError] = useState('');
+  const [showLoadingPopup, setShowLoadingPopup] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
 
   const topHotspots = useMemo(() => hotspots.slice(0, 4), [hotspots]);
 
@@ -117,7 +87,15 @@ const DashboardPage = () => {
 
   const handleListingSubmit = async (event) => {
     event.preventDefault();
+    if (submitLockRef.current || isSubmitting) {
+      setShowLoadingPopup(true);
+      return;
+    }
+
+    submitLockRef.current = true;
+    setIsSubmitting(true);
     setListingSubmitError('');
+    setShowLoadingPopup(false);
 
     const formData = new FormData();
     formData.append('title', listingForm.title);
@@ -129,9 +107,9 @@ const DashboardPage = () => {
     formData.append('baths', listingForm.baths);
     formData.append('sizeSqm', listingForm.sizeSqm);
     formData.append('description', listingForm.description);
-    if (listingForm.latitude && listingForm.longitude) {
-      formData.append('latitude', listingForm.latitude);
-      formData.append('longitude', listingForm.longitude);
+    if (listingForm.latitude !== '' && listingForm.longitude !== '') {
+      formData.append('latitude', String(listingForm.latitude));
+      formData.append('longitude', String(listingForm.longitude));
     }
 
     listingForm.images.forEach((image) => {
@@ -142,8 +120,12 @@ const DashboardPage = () => {
       await createListing(formData);
       setIsPostModalOpen(false);
       setListingForm(createInitialForm());
+      alert('Listing successfully posted!');
     } catch (submitError) {
       setListingSubmitError(submitError.message || 'Unable to publish listing. Please try again.');
+    } finally {
+      submitLockRef.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -246,44 +228,7 @@ const DashboardPage = () => {
             <button className="icon-btn" type="button" onClick={() => navigate('/saved-homes')} aria-label="Saved homes">
               <Heart size={18} />
             </button>
-            <div className="notification-container">
-              <button className="icon-btn notification-btn" onClick={() => setIsNotificationDropdownOpen(!isNotificationDropdownOpen)} type="button">
-                <Bell size={18} />
-                {notifications.filter((notification) => !notification.isRead).length > 0 && (
-                  <span className="notification-badge">
-                    {notifications.filter((notification) => !notification.isRead).length}
-                  </span>
-                )}
-              </button>
-              {isNotificationDropdownOpen && (
-                <div className="notification-dropdown">
-                  <div className="notification-header">
-                    <h3>Notifications</h3>
-                    <span className="notification-count">
-                      {notifications.filter((notification) => !notification.isRead).length} new
-                    </span>
-                  </div>
-                  <div className="notification-list">
-                    {notifications.map((notification) => (
-                      <div key={notification.id} className={`notification-item ${!notification.isRead ? 'unread' : ''}`}>
-                        <div className="notification-icon">
-                          {notification.type === 'contract' && <FileText size={16} />}
-                          {notification.type === 'property' && <Home size={16} />}
-                          {notification.type === 'reminder' && <Bell size={16} />}
-                          {notification.type === 'system' && <Settings size={16} />}
-                        </div>
-                        <div className="notification-content">
-                          <div className="notification-title">{notification.title}</div>
-                          <div className="notification-message">{notification.message}</div>
-                          <div className="notification-time">{notification.time}</div>
-                        </div>
-                        {!notification.isRead && <div className="notification-dot" />}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationMenu />
             <ProfileMenu />
           </div>
         </header>
@@ -369,7 +314,22 @@ const DashboardPage = () => {
               </button>
             </div>
 
-            <form className="post-listing-form" onSubmit={handleListingSubmit}>
+            <form className="post-listing-form" onSubmit={handleListingSubmit} style={{ position: 'relative' }}>
+              {isSubmitting && (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: 'rgba(255, 255, 255, 0.85)', zIndex: 100,
+                  display: 'flex', justifyContent: 'center', alignItems: 'center',
+                  flexDirection: 'column', borderRadius: '8px'
+                }}>
+                  <div style={{
+                    width: '40px', height: '40px', border: '4px solid #f3f3f3', 
+                    borderTop: '4px solid #e63946', borderRadius: '50%', 
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  <h3 style={{ marginTop: '16px', color: '#1a1a1a' }}>Posting your listing...</h3>
+                </div>
+              )}
               <div className="post-form-grid">
                 <label className="post-field">
                   <span>Property Name</span>
@@ -502,11 +462,53 @@ const DashboardPage = () => {
                 <button className="outline-btn" type="button" onClick={() => setIsPostModalOpen(false)}>
                   Cancel
                 </button>
-                <button className="solid-btn" type="submit">
-                  Publish Listing
+                <button className="solid-btn" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Publishing...' : 'Publish Listing'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showLoadingPopup && (
+        <div className="dashboard-popup-overlay" role="presentation" onClick={() => setShowLoadingPopup(false)}>
+          <div
+            className="dashboard-popup"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="listing-loading-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="dashboard-popup-close"
+              aria-label="Close loading notice"
+              onClick={() => setShowLoadingPopup(false)}
+            >
+              <X size={16} />
+            </button>
+
+            <div className="dashboard-popup-header">
+              <div className="dashboard-popup-icon">
+                <AlertCircle size={18} />
+              </div>
+              <div>
+                <h2 id="listing-loading-title">Posting listing</h2>
+                <p>Your listing is still uploading. Please wait for the current submission to finish.</p>
+              </div>
+            </div>
+
+            <div className="dashboard-popup-body">
+              <h3>Why this appears</h3>
+              <p>Clicking Publish again before the upload finishes can create duplicate listings.</p>
+            </div>
+
+            <div className="dashboard-popup-actions">
+              <button type="button" className="dashboard-popup-button" onClick={() => setShowLoadingPopup(false)}>
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -8,6 +8,8 @@ import SearchResultsPage from './pages/SearchResultsPage';
 import SavedHomesPage from './pages/SavedHomesPage';
 import ListingDetailsPage from './pages/ListingDetailsPage';
 import MyContractsPage from './pages/MyContractsPage';
+import OpenContractPage from './pages/OpenContractPage';
+import LandlordProposalsPage from './pages/LandlordProposalsPage';
 import { AuthProvider } from './context/AuthContext';
 import { RentalDataProvider } from './context/RentalDataContext';
 import { PublicOnlyRoute, RequireAuth } from './components/RouteGuards';
@@ -30,6 +32,8 @@ function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/search-results" element={<SearchResultsPage />} />
                 <Route path="/listing/:id" element={<ListingDetailsPage />} />
+                <Route path="/listing/:id/proposals" element={<LandlordProposalsPage />} />
+                <Route path="/contract/:id" element={<OpenContractPage />} />
                 <Route path="/saved-homes" element={<SavedHomesPage />} />
                 <Route path="/my-contracts" element={<MyContractsPage />} />
               </Route>

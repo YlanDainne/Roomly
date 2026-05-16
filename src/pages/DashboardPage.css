@@ -651,6 +651,110 @@
   margin-top: 6px;
 }
 
+.dashboard-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 12, 14, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 130;
+  padding: 20px;
+}
+
+.dashboard-popup {
+  width: min(520px, 100%);
+  background: #ffffff;
+  border: 1px solid #d9d9dc;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  padding: 22px;
+  position: relative;
+}
+
+.dashboard-popup-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #d6d6d9;
+  background: #fff;
+  color: #111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dashboard-popup-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-right: 48px;
+}
+
+.dashboard-popup-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(230, 57, 70, 0.12);
+  color: #e63946;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dashboard-popup-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.dashboard-popup-header p,
+.dashboard-popup-body p {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.dashboard-popup-body {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #ececef;
+}
+
+.dashboard-popup-body h3 {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #7a7a80;
+  margin-bottom: 8px;
+}
+
+.dashboard-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.dashboard-popup-button {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  background: #111;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-popup-button:hover {
+  background: #2a2a2f;
+}
+
 .dashboard-empty-state {
   border: 1px dashed #d6d6da;
   border-radius: 14px;
@@ -745,7 +849,7 @@
 }
 
 .listing-save-btn.saved {
-  background: #1d1d20;
+  background: #e63946;
   color: #fff;
 }
 

@@ -36,7 +36,12 @@ async function request(path, options = {}) {
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 
-  if (response.status === 204) {
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return null;
+  }
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
     return null;
   }
 
@@ -48,8 +53,20 @@ export const rentalApi = {
   getSavedHomes: () => request('/saved-homes'),
   getHotspots: () => request('/hotspots'),
   getCampuses: () => request('/campuses'),
+  getNotifications: () => request('/notifications'),
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PUT' }),
   saveListing: (id) => request(`/saved-homes/${id}`, { method: 'POST' }),
   unsaveListing: (id) => request(`/saved-homes/${id}`, { method: 'DELETE' }),
+  contactLandlord: (id) => request(`/listings/${id}/contact`, { method: 'POST' }),
+  submitContractProposal: (id, payload) => request(`/listings/${id}/contract-request`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }),
+  getMyContractProposals: () => request('/contract-proposals'),
+  deleteContractProposal: (proposalId) => request(`/contract-proposals/${proposalId}`, { method: 'DELETE' }),
+  getListingProposals: (listingId) => request(`/listings/${listingId}/proposals`),
+  deleteListingProposal: (listingId, proposalId) => request(`/listings/${listingId}/proposals/${proposalId}`, { method: 'DELETE' }),
+  approveListingProposal: (listingId, proposalId) => request(`/listings/${listingId}/proposals/${proposalId}/approve`, { method: 'POST' }),
   createListing: (formData) => request('/listings', { method: 'POST', body: formData }),
   updateListing: (id, formData) => request(`/listings/${id}`, { method: 'PUT', body: formData }),
   deleteListing: (id) => request(`/listings/${id}`, { method: 'DELETE' })
