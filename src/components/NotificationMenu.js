@@ -59,6 +59,7 @@ const NotificationMenu = () => {
   };
 
   const handleNotificationClick = (notif) => {
+    console.debug('Notification clicked', notif);
     if (!notif.read) markAsRead(notif.id);
     
     // Navigate based on referenceType

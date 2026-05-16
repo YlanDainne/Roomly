@@ -189,10 +189,14 @@ public class ListingService {
   @Transactional(readOnly = true)
   public List<com.roomly.backend.entity.ContractProposal> findProposalsForListing(UUID userId, long listingId) {
     Listing listing = requireListing(listingId);
+    System.out.println("[DEBUG] findProposalsForListing - userId: " + userId + ", listingId: " + listingId + ", listing.landlordId: " + listing.getLandlordId());
     if (!listing.getLandlordId().equals(userId)) {
+      System.out.println("[DEBUG] Unauthorized access attempt by user " + userId + " for listing " + listingId + " owned by " + listing.getLandlordId());
       throw new IllegalArgumentException("Not authorized to view proposals for this listing");
     }
-    return contractProposalRepository.findByListingIdOrderByCreatedAtDesc(listingId);
+    List<com.roomly.backend.entity.ContractProposal> proposals = contractProposalRepository.findByListingIdOrderByCreatedAtDesc(listingId);
+    System.out.println("[DEBUG] Proposals found for listing " + listingId + ": " + (proposals == null ? 0 : proposals.size()));
+    return proposals;
   }
 
   public void approveContractProposal(UUID userId, long listingId, String proposalId) {
