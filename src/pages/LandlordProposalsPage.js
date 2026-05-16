@@ -11,15 +11,19 @@ const LandlordProposalsPage = () => {
   const navigate = useNavigate();
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await rentalApi.getListingProposals(id);
+        console.debug('getListingProposals response for listing', id, res);
         setProposals(Array.isArray(res) ? res : []);
+        setError(null);
       } catch (err) {
         console.error('Failed to load proposals', err);
         setProposals([]);
+        setError(err.message || 'Failed to load proposals');
       } finally {
         setLoading(false);
       }
@@ -68,7 +72,9 @@ const LandlordProposalsPage = () => {
       <main className="dashboard-content">
         <h1>Proposals for listing #{id}</h1>
         {loading ? <p>Loading…</p> : (
-          proposals.length === 0 ? (
+          error ? (
+            <p className="error">Error: {error}</p>
+          ) : proposals.length === 0 ? (
             <p>No proposals yet.</p>
           ) : (
             <section className="proposals-grid">
