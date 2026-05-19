@@ -64,12 +64,15 @@ public class SupabaseJwtFilter extends OncePerRequestFilter {
 
             // Ensure user exists in database for foreign key constraints
             UUID userUUID = UUID.fromString(userId);
-            userService.ensureUserExists(userUUID, email);
+            com.roomly.backend.entity.User user = userService.ensureUserExists(userUUID, email);
             logger.debug("User record ensured in database for user: {}", userId);
 
             // Create authentication token
             Collection<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            if ("admin".equalsIgnoreCase(user.getRole())) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            }
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     userId, null, authorities);
@@ -88,9 +91,7 @@ public class SupabaseJwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Skip filter for public endpoints
-        return path.startsWith("/api/public/") ||
-               path.startsWith("/api/listings") && request.getMethod().equals("GET") ||
-               path.startsWith("/health");
+        // Skip filter for public endpoints that definitely don't need auth
+        return path.startsWith("/api/public/") || path.startsWith("/health");
     }
 }

@@ -19,4 +19,5 @@ public record ListingResponse(
     boolean saved,
     String hotspotLabel,
     String landlordName,
-    String landlordEmail) {}
+    String landlordEmail,
+    String status) {}

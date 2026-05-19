@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import ProfileMenu from '../components/ProfileMenu';
 import { rentalApi } from '../services/rentalApi';
+import { usePopup } from '../context/PopupContext';
 
 const CONTRACT_STORAGE_KEY = 'roomly-open-contracts';
 
@@ -23,6 +24,7 @@ const MyContractsPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [contracts, setContracts] = useState([]);
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     const loadContracts = async () => {
@@ -47,7 +49,7 @@ const MyContractsPage = () => {
       setContracts((prev) => prev.filter((c) => c.id !== proposalId));
     } catch (error) {
       console.error('Failed to cancel proposal:', error);
-      alert(error.message || 'Unable to cancel proposal.');
+      showPopup(error.message || 'Unable to cancel proposal.', 'Cancellation Failed');
     }
   };
 

@@ -85,6 +85,13 @@ export const RentalDataProvider = ({ children }) => {
     });
   }, [session, refreshSavedHomes]);
 
+  useEffect(() => {
+    // When session changes, refresh listings to ensure saved flags are correct
+    if (session) {
+      refreshListings();
+    }
+  }, [session, refreshListings]);
+
   const createListing = useCallback(async (formData) => {
     await rentalApi.createListing(formData);
     await loadAll();

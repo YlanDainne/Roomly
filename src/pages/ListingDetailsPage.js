@@ -7,6 +7,7 @@ import NotificationMenu from '../components/NotificationMenu';
 import LocationPickerMap from '../components/LocationPickerMap';
 import { Home, Search, Heart, Bell, MapPin, Bed, Bath, Maximize, ArrowLeft, Mail, User } from 'lucide-react';
 import { resolveListingImageUrl } from '../lib/listingImageUrl';
+import { usePopup } from '../context/PopupContext';
 import './ListingDetailsPage.css';
 
 const ListingDetailsPage = () => {
@@ -14,6 +15,7 @@ const ListingDetailsPage = () => {
   const navigate = useNavigate();
   const { listings, toggleSaved, deleteListing } = useRentalData();
   const { user } = useAuth();
+  const { showPopup } = usePopup();
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this listing?')) {
@@ -22,7 +24,7 @@ const ListingDetailsPage = () => {
         navigate('/dashboard');
       } catch (err) {
         console.error('Failed to delete listing', err);
-        alert('Failed to delete listing. Please try again.');
+        showPopup('Failed to delete listing. Please try again.', 'Error');
       }
     }
   };
@@ -157,13 +159,15 @@ const ListingDetailsPage = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                <button 
-                  className="solid-btn contact-btn" 
-                  style={{ flex: 1 }} 
-                  onClick={() => navigate(`/contract/${listing.id}`)}
-                >
-                  Open Contract
-                </button>
+                {(!user || !listing.landlordEmail || user.email.toLowerCase() !== listing.landlordEmail.toLowerCase()) && (
+                  <button 
+                    className="solid-btn contact-btn" 
+                    style={{ flex: 1 }} 
+                    onClick={() => navigate(`/contract/${listing.id}`)}
+                  >
+                    Open Contract
+                  </button>
+                )}
                 {user && user.email && listing.landlordEmail && user.email.toLowerCase() === listing.landlordEmail.toLowerCase() && (
                   <>
                     <button className="outline-btn" style={{ borderColor: '#e63946', color: '#e63946' }} onClick={handleDelete}>

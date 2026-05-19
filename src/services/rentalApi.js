@@ -69,5 +69,10 @@ export const rentalApi = {
   approveListingProposal: (listingId, proposalId) => request(`/listings/${listingId}/proposals/${proposalId}/approve`, { method: 'POST' }),
   createListing: (formData) => request('/listings', { method: 'POST', body: formData }),
   updateListing: (id, formData) => request(`/listings/${id}`, { method: 'PUT', body: formData }),
-  deleteListing: (id) => request(`/listings/${id}`, { method: 'DELETE' })
+  deleteListing: (id) => request(`/listings/${id}`, { method: 'DELETE' }),
+  uploadAvatar: (formData) => request('/users/me/avatar', { method: 'POST', body: formData }),
+  getMe: () => request('/users/me'),
+  getAdminPendingListings: () => request('/admin/listings/pending'),
+  updateListingStatusAdmin: (id, status) => request(`/admin/listings/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  deleteListingAdmin: (id) => request(`/admin/listings/${id}`, { method: 'DELETE' })
 };

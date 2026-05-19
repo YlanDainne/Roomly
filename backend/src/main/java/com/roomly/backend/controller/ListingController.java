@@ -155,6 +155,13 @@ public class ListingController {
 
   @GetMapping("/listings/{id}/proposals")
   public ResponseEntity<?> getProposalsForListing(@PathVariable long id) {
+    System.out.println("[DEBUG] getProposalsForListing invoked for listing: " + id);
+    try {
+      java.security.Principal principal = SecurityContextHolder.getContext().getAuthentication();
+      System.out.println("[DEBUG] current Authentication: " + SecurityContextHolder.getContext().getAuthentication());
+    } catch (Exception e) {
+      System.out.println("[DEBUG] failed to read SecurityContext: " + e.getMessage());
+    }
     UUID userId = getCurrentUserId();
     if (userId == null) {
       return ResponseEntity.status(401).body("User not authenticated");

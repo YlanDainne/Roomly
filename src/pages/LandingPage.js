@@ -54,11 +54,7 @@ const LandingPage = () => {
         <div className="parallax-layer parallax-layer-near" />
       </div>
 
-      <header className="floating-header">
-        <button className="nav-link" onClick={() => navigate(session ? '/dashboard' : '/login')}>
-          {session ? 'Dashboard' : 'Sign In'}
-        </button>
-      </header>
+
 
       <div
         className="landing-sections"

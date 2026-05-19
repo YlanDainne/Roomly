@@ -25,6 +25,9 @@ public class Listing {
   private UUID landlordId;
 
   @Column(nullable = false)
+  private String status = "pending";
+
+  @Column(nullable = false)
   private String title;
 
   @Column(nullable = false)
@@ -74,6 +77,14 @@ public class Listing {
 
   public void setLandlordId(UUID landlordId) {
     this.landlordId = landlordId;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 
   public String getTitle() {

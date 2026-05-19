@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase, supabaseConfigured } from '../lib/supabaseClient';
+import { usePopup } from './PopupContext';
 
 const AuthContext = createContext(null);
 
@@ -7,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     if (!supabase) {
@@ -53,8 +55,10 @@ export const AuthProvider = ({ children }) => {
         timeoutId = setTimeout(() => {
           console.log('User has been AFK for 10 minutes. Signing out...');
           signOut().then(() => {
-            alert('Your session has expired due to inactivity.');
-            window.location.href = '/login';
+            showPopup('Your session has expired due to inactivity.', 'Session Expired');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 2000);
           });
         }, INACTIVITY_TIMEOUT);
       }

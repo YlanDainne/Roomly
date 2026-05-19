@@ -20,6 +20,9 @@ public class ContractProposal {
   @Column(nullable = false)
   private UUID userId;
 
+  private String proposerName;
+  private String proposerEmail;
+
   private String listingTitle;
   private String address;
   private Integer proposedPrice;
@@ -32,10 +35,12 @@ public class ContractProposal {
 
   public ContractProposal() {}
 
-  public ContractProposal(String id, long listingId, UUID userId, String listingTitle, String address, Integer proposedPrice, String viewingDate, String viewingTime, String moveInTimeline, String message, String status, OffsetDateTime createdAt) {
+  public ContractProposal(String id, long listingId, UUID userId, String proposerName, String proposerEmail, String listingTitle, String address, Integer proposedPrice, String viewingDate, String viewingTime, String moveInTimeline, String message, String status, OffsetDateTime createdAt) {
     this.id = id;
     this.listingId = listingId;
     this.userId = userId;
+    this.proposerName = proposerName;
+    this.proposerEmail = proposerEmail;
     this.listingTitle = listingTitle;
     this.address = address;
     this.proposedPrice = proposedPrice;
@@ -54,6 +59,10 @@ public class ContractProposal {
   public void setListingId(long listingId) { this.listingId = listingId; }
   public UUID getUserId() { return userId; }
   public void setUserId(UUID userId) { this.userId = userId; }
+  public String getProposerName() { return proposerName; }
+  public void setProposerName(String proposerName) { this.proposerName = proposerName; }
+  public String getProposerEmail() { return proposerEmail; }
+  public void setProposerEmail(String proposerEmail) { this.proposerEmail = proposerEmail; }
   public String getListingTitle() { return listingTitle; }
   public void setListingTitle(String listingTitle) { this.listingTitle = listingTitle; }
   public String getAddress() { return address; }

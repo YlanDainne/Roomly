@@ -31,8 +31,10 @@ public class SecurityConfig {
           .requestMatchers(HttpMethod.POST, "/api/listings").authenticated()
           .requestMatchers(HttpMethod.PUT, "/api/listings/**").authenticated()
           .requestMatchers(HttpMethod.DELETE, "/api/listings/**").authenticated()
-            .requestMatchers("/uploads/**", "/health").permitAll()
+          .requestMatchers("/api/admin/**").hasRole("ADMIN")
+          .requestMatchers("/uploads/**", "/health").permitAll()
             .requestMatchers("/api/saved-homes/**").authenticated()
+            .requestMatchers("/api/users/**").authenticated()
             .anyRequest().permitAll())
         .addFilterBefore(supabaseJwtFilter, UsernamePasswordAuthenticationFilter.class);
 

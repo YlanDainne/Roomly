@@ -50,10 +50,33 @@ public class ListingService {
   @Transactional(readOnly = true)
   public List<ListingResponse> findAll(UUID userId) {
     List<Long> savedListingIds = loadSavedListingIds(userId);
-    System.out.println("[DEBUG] findAll - userId: " + userId + ", savedListingIds: " + savedListingIds);
     return listingRepository.findAll().stream()
+        .filter(listing -> "approved".equalsIgnoreCase(listing.getStatus()))
         .map(listing -> toResponse(listing, savedListingIds.contains(listing.getId())))
         .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<ListingResponse> findPendingListings(UUID userId) {
+    List<Long> savedListingIds = loadSavedListingIds(userId);
+    return listingRepository.findAll().stream()
+        .filter(listing -> "pending".equalsIgnoreCase(listing.getStatus()))
+        .map(listing -> toResponse(listing, savedListingIds.contains(listing.getId())))
+        .toList();
+  }
+
+  public void updateListingStatus(long id, String status) {
+    Listing listing = requireListing(id);
+    listing.setStatus(status);
+    listingRepository.save(listing);
+
+    if ("approved".equalsIgnoreCase(status)) {
+        notificationRepository.save(new Notification(listing.getLandlordId(), 
+            "Your listing '" + listing.getTitle() + "' has been approved and is now live!", "listing", id));
+    } else if ("rejected".equalsIgnoreCase(status)) {
+        notificationRepository.save(new Notification(listing.getLandlordId(), 
+            "Your listing '" + listing.getTitle() + "' was rejected. Please edit it and resubmit for approval.", "listing", id));
+    }
   }
 
   @Transactional(readOnly = true)
@@ -125,7 +148,7 @@ public class ListingService {
   public String submitContractProposal(UUID userId, long listingId, ContractProposalRequest request) {
     Listing listing = requireListing(listingId);
     if (userId.equals(listing.getLandlordId())) {
-      return null;
+      throw new IllegalArgumentException("You cannot submit a proposal to your own listing.");
     }
 
     User user = userRepository.findById(userId).orElse(null);
@@ -163,6 +186,8 @@ public class ListingService {
       proposalId,
       listingId,
       userId,
+      userName,
+      userEmail,
       listing.getTitle(),
       listing.getNeighborhood() + ", " + listing.getCity(),
       request != null && request.proposedPrice() != null && !request.proposedPrice().isBlank() ? Integer.valueOf(request.proposedPrice()) : null,
@@ -396,10 +421,11 @@ public class ListingService {
         listing.getLatitude(),
         listing.getLongitude(),
         new ArrayList<>(listing.getImageUrls()),
-          saved,
+        saved,
         CampusCatalog.resolve(toRequest(listing)).hotspotLabel(),
         landlordName,
-        landlordEmail);
+        landlordEmail,
+        listing.getStatus());
   }
 
         private List<Long> loadSavedListingIds(UUID userId) {

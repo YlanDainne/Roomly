@@ -35,6 +35,9 @@ public class User {
     @Column(nullable = false)
     private Boolean verified = false;
 
+    @Column(nullable = false)
+    private String role = "user";
+
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
     private Instant createdAt;
 
@@ -123,6 +126,14 @@ public class User {
 
     public void setVerified(Boolean verified) {
         this.verified = verified;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public Instant getCreatedAt() {

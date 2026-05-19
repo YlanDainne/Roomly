@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { rentalApi } from '../services/rentalApi';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -47,6 +48,17 @@ const LoginPage = () => {
 
     try {
       await signIn({ email, password });
+      
+      try {
+        const userProfile = await rentalApi.getMe();
+        if (userProfile && userProfile.role === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to fetch user profile:', err);
+      }
+
       navigate(redirectTo, { replace: true });
     } catch (authError) {
       const message = authError.message || 'Unable to sign in.';

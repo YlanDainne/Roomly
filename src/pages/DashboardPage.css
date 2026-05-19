@@ -98,6 +98,22 @@
   font-weight: 500;
 }
 
+.nav-item.admin-nav-item {
+  margin-top: auto;
+  margin-bottom: 20px;
+  padding: 14px 30px;
+  background: #f0f7ff;
+  border-left-color: #2e8be8;
+  border-left: 3px solid #2e8be8;
+  color: #1f5a96;
+  font-weight: 500;
+}
+
+.nav-item.admin-nav-item:hover {
+  background: #e8f3ff;
+  color: #1e40af;
+}
+
 .sidebar-bottom {
   padding: 0 30px;
   margin-top: auto;

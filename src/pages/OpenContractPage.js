@@ -7,6 +7,7 @@ import NotificationMenu from '../components/NotificationMenu';
 import { resolveListingImageUrl } from '../lib/listingImageUrl';
 import { ArrowLeft, CalendarDays, Clock3, Home, Heart, MapPin, HandCoins, BadgeDollarSign, Eye } from 'lucide-react';
 import { rentalApi } from '../services/rentalApi';
+import { usePopup } from '../context/PopupContext';
 import './OpenContractPage.css';
 
 const CONTRACT_STORAGE_KEY = 'roomly-open-contracts';
@@ -44,6 +45,7 @@ const OpenContractPage = () => {
   }));
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState(null);
+  const { showPopup } = usePopup();
 
   const updateField = (field, value) => {
     setFormState((previous) => ({
@@ -56,12 +58,17 @@ const OpenContractPage = () => {
     event.preventDefault();
 
     if (!user) {
-      alert('You must be logged in to open a contract.');
+      showPopup('You must be logged in to open a contract.', 'Authentication Required');
       return;
     }
 
     if (!listing) {
-      alert('Listing not found.');
+      showPopup('Listing not found.', 'Error');
+      return;
+    }
+
+    if (user.email && listing.landlordEmail && user.email.toLowerCase() === listing.landlordEmail.toLowerCase()) {
+      showPopup('You cannot submit a proposal to your own listing.', 'Action Not Allowed');
       return;
     }
 
@@ -95,7 +102,7 @@ const OpenContractPage = () => {
       setSubmitted(true);
     } catch (error) {
       console.error('Failed to submit contract proposal:', error);
-      alert(error.message || 'Unable to submit contract proposal.');
+      showPopup(error.message || 'Unable to submit contract proposal.', 'Submission Failed');
     }
   };
 
@@ -108,11 +115,11 @@ const OpenContractPage = () => {
       await rentalApi.deleteContractProposal(submittedId);
       setSubmitted(false);
       setSubmittedId(null);
-      alert('Proposal cancelled.');
+      showPopup('Proposal cancelled.', 'Cancelled');
       navigate('/my-contracts');
     } catch (error) {
       console.error('Failed to cancel proposal:', error);
-      alert(error.message || 'Unable to cancel proposal.');
+      showPopup(error.message || 'Unable to cancel proposal.', 'Cancellation Failed');
     }
   };
 
@@ -121,6 +128,22 @@ const OpenContractPage = () => {
       <div className="dashboard-page contract-page">
         <main className="dashboard-content contract-shell">
           <h2>Listing Not Found</h2>
+          <button className="solid-btn" type="button" onClick={() => navigate(-1)}>
+            Go Back
+          </button>
+        </main>
+      </div>
+    );
+  }
+
+  const isLandlord = user && user.email && listing.landlordEmail && user.email.toLowerCase() === listing.landlordEmail.toLowerCase();
+
+  if (isLandlord) {
+    return (
+      <div className="dashboard-page contract-page">
+        <main className="dashboard-content contract-shell">
+          <h2>Action Not Allowed</h2>
+          <p style={{marginBottom: '20px', color: '#666'}}>You cannot submit a proposal to your own listing.</p>
           <button className="solid-btn" type="button" onClick={() => navigate(-1)}>
             Go Back
           </button>

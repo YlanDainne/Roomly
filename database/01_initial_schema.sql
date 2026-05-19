@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_landlord BOOLEAN DEFAULT FALSE,
     bio TEXT,
     verified BOOLEAN DEFAULT FALSE,
+    role VARCHAR(50) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -36,6 +37,7 @@ CREATE TABLE IF NOT EXISTS listings (
     baths INT,
     size_sqm DECIMAL(10, 2),
     availability_date DATE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     listing_status VARCHAR(20) DEFAULT 'available',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -130,3 +132,20 @@ CREATE POLICY "Anyone can view listings" ON listings
 -- Everyone can view images
 CREATE POLICY "Anyone can view listing images" ON listing_images
     FOR SELECT USING (true);
+
+-- =============================================================================
+-- MIGRATION SCRIPTS FOR EXISTING DATABASES
+-- Run these if you need to add role and status columns to existing tables
+-- =============================================================================
+
+-- Add role column to users table if it doesn't exist
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
+
+-- Add status column to listings table if it doesn't exist
+ALTER TABLE listings
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected'));
+
+-- Create index on status column for faster queries
+CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);

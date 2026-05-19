@@ -32,11 +32,21 @@ public class SupabaseStorageService {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * Upload a file to Supabase Storage bucket
+     * Upload a file to Supabase Storage bucket under the 'listings' folder
      * @param file MultipartFile to upload
      * @return Public URL of the uploaded file
      */
     public String uploadFile(MultipartFile file) throws IOException {
+        return uploadFile(file, "listings");
+    }
+
+    /**
+     * Upload a file to Supabase Storage bucket under a specific folder
+     * @param file MultipartFile to upload
+     * @param folder Folder name (e.g., 'avatars', 'listings')
+     * @return Public URL of the uploaded file
+     */
+    public String uploadFile(MultipartFile file, String folder) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be empty");
         }
@@ -45,7 +55,7 @@ public class SupabaseStorageService {
         String originalFilename = file.getOriginalFilename();
         String extension = getFileExtension(originalFilename);
         String uniqueFilename = UUID.randomUUID().toString() + extension;
-        String filePath = "listings/" + uniqueFilename;
+        String filePath = folder + "/" + uniqueFilename;
 
         // Upload to Supabase Storage
         uploadToStorage(filePath, file.getBytes());

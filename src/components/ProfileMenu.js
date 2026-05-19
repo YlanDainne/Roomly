@@ -61,11 +61,11 @@ const ProfileMenu = () => {
             </div>
           </div>
           <div className="profile-dropdown-divider" />
-          <button className="profile-dropdown-item" type="button">
+          <button className="profile-dropdown-item" type="button" onClick={() => { setIsOpen(false); navigate('/account?tab=profile'); }}>
             <User size={16} />
             <span>View Profile</span>
           </button>
-          <button className="profile-dropdown-item" type="button">
+          <button className="profile-dropdown-item" type="button" onClick={() => { setIsOpen(false); navigate('/account?tab=preferences'); }}>
             <Settings size={16} />
             <span>Settings</span>
           </button>

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPage.css';
 import {
@@ -24,10 +24,12 @@ import {
 } from 'lucide-react';
 import { useRentalData } from '../context/RentalDataContext';
 import { useAuth } from '../context/AuthContext';
+import { rentalApi } from '../services/rentalApi';
 import { campusOptions, getCampusByName, campusCatalog } from '../data/cebuCampuses';
 import ProfileMenu from '../components/ProfileMenu';
 import NotificationMenu from '../components/NotificationMenu';
 import LocationPickerMap from '../components/LocationPickerMap';
+import { usePopup } from '../context/PopupContext';
 
 
 
@@ -56,9 +58,23 @@ const DashboardPage = () => {
   const [listingSubmitError, setListingSubmitError] = useState('');
   const [showLoadingPopup, setShowLoadingPopup] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { showPopup } = usePopup();
   const submitLockRef = useRef(false);
 
   const topHotspots = useMemo(() => hotspots.slice(0, 4), [hotspots]);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const userProfile = await rentalApi.getMe();
+        setIsAdmin(userProfile?.role === 'admin');
+      } catch (err) {
+        setIsAdmin(false);
+      }
+    };
+    checkAdminStatus();
+  }, []);
 
   const handleListingChange = (event) => {
     const { name, value, files } = event.target;
@@ -120,7 +136,7 @@ const DashboardPage = () => {
       await createListing(formData);
       setIsPostModalOpen(false);
       setListingForm(createInitialForm());
-      alert('Listing successfully posted!');
+      showPopup('Listing successfully posted!', 'Success');
     } catch (submitError) {
       setListingSubmitError(submitError.message || 'Unable to publish listing. Please try again.');
     } finally {
@@ -203,6 +219,12 @@ const DashboardPage = () => {
             <FileText size={18} />
             <span>My Contracts</span>
           </button>
+          {isAdmin && (
+            <button className="nav-item admin-nav-item" onClick={() => navigate('/admin/dashboard')}>
+              <AlertCircle size={18} />
+              <span>Admin Dashboard</span>
+            </button>
+          )}
         </nav>
       </aside>
 

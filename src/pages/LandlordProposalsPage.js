@@ -5,6 +5,7 @@ import { MapPin, CalendarDays, Clock3, DollarSign, User } from 'lucide-react';
 import { rentalApi } from '../services/rentalApi';
 import ProfileMenu from '../components/ProfileMenu';
 import NotificationMenu from '../components/NotificationMenu';
+import { usePopup } from '../context/PopupContext';
 
 const LandlordProposalsPage = () => {
   const { id } = useParams();
@@ -12,6 +13,7 @@ const LandlordProposalsPage = () => {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     const load = async () => {
@@ -36,10 +38,10 @@ const LandlordProposalsPage = () => {
     try {
       await rentalApi.deleteListingProposal(id, proposalId);
       setProposals((p) => p.filter((x) => x.id !== proposalId));
-      alert('Proposal rejected and proposer notified.');
+      showPopup('Proposal rejected and proposer notified.', 'Proposal Rejected');
     } catch (err) {
       console.error('Failed to reject proposal', err);
-      alert(err.message || 'Unable to reject proposal');
+      showPopup(err.message || 'Unable to reject proposal', 'Action Failed');
     }
   };
 
@@ -50,10 +52,10 @@ const LandlordProposalsPage = () => {
       setProposals((p) =>
         p.map((x) => (x.id === proposalId ? { ...x, status: 'Approved' } : x))
       );
-      alert('Proposal approved and proposer notified.');
+      showPopup('Proposal approved and proposer notified.', 'Proposal Approved');
     } catch (err) {
       console.error('Failed to approve proposal', err);
-      alert(err.message || 'Unable to approve proposal');
+      showPopup(err.message || 'Unable to approve proposal', 'Action Failed');
     }
   };
 
@@ -70,41 +72,63 @@ const LandlordProposalsPage = () => {
       </header>
 
       <main className="dashboard-content">
-        <h1>Proposals for listing #{id}</h1>
+        <div className="dashboard-scroll-area">
+          <div className="dashboard-title-area">
+            <div>
+              <h1 className="dashboard-title">Proposals for Listing #{id}</h1>
+              <p className="dashboard-subtitle">Review and manage contract proposals submitted by interested students.</p>
+            </div>
+          </div>
+
         {loading ? <p>Loading…</p> : (
           error ? (
             <p className="error">Error: {error}</p>
           ) : proposals.length === 0 ? (
-            <p>No proposals yet.</p>
+            <div className="dashboard-empty-state">No proposals yet. When a student submits a proposal, it will appear here.</div>
           ) : (
             <section className="proposals-grid">
               {proposals.map((p) => (
                 <article className="proposal-card" key={p.id}>
-                  <h3>{p.listingTitle}</h3>
-                  <p><MapPin size={14} /> {p.address}</p>
+                  <div className="proposal-top">
+                    <div>
+                      <h3>{p.listingTitle}</h3>
+                      <p><MapPin size={14} /> {p.address}</p>
+                    </div>
+                    <span className={`proposal-badge ${p.status === 'Pending Approval' ? 'pending' : 'approved'}`}>
+                      {p.status}
+                    </span>
+                  </div>
                   <div className="proposal-meta">
                     <span><DollarSign size={14} /> ₱ {p.proposedPrice ? Number(p.proposedPrice).toLocaleString() : '—'}</span>
                     <span><CalendarDays size={14} /> {p.viewingDate || 'Not set'}</span>
                     <span><Clock3 size={14} /> {p.viewingTime || 'Not set'}</span>
                   </div>
                   <div className="proposal-bottom">
-                    <div className="proposer">
-                      <User size={16} /> Status: <strong>{p.status}</strong>
-                    </div>
-                    <div>
-                      {p.status === 'Pending Approval' && (
-                        <>
-                          <button className="solid-btn" style={{ marginRight: 8 }} onClick={() => handleApprove(p.id)}>Approve</button>
-                          <button className="outline-btn danger-btn" onClick={() => handleReject(p.id)}>Reject</button>
-                        </>
+                    <div className="proposer-info">
+                      <div className="proposer-name">
+                        <User size={16} /> <strong>{p.proposerName || 'Student'}</strong>
+                      </div>
+                      {p.proposerEmail && (
+                        <div className="proposer-email">
+                          <a href={`mailto:${p.proposerEmail}`}>
+                            {p.proposerEmail}
+                          </a>
+                        </div>
                       )}
                     </div>
+                    {p.status === 'Pending Approval' && (
+                      <div className="proposal-actions">
+                        <button className="solid-btn" onClick={() => handleApprove(p.id)}>Approve</button>
+                        <button className="outline-btn danger-btn" onClick={() => handleReject(p.id)}>Reject</button>
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
             </section>
           )
         )}
+        </div>
       </main>
     </div>
   );

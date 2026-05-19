@@ -1,0 +1,266 @@
+.account-layout {
+  display: flex;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.account-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #666;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.account-tab-btn:hover {
+  background: rgba(17, 17, 17, 0.04);
+  color: #111;
+}
+
+.account-tab-btn.active {
+  background: #111;
+  color: #fff;
+}
+
+body.dark-mode .account-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f4f5;
+}
+
+body.dark-mode .account-tab-btn.active {
+  background: #e4e4e7;
+  color: #111;
+}
+
+.account-content {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e6e6ea;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(17, 17, 17, 0.04);
+}
+
+body.dark-mode .account-content {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+.account-content h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  margin: 0 0 8px 0;
+  color: #111;
+}
+
+.account-content p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.account-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.account-form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111;
+}
+
+body.dark-mode .account-form-group label {
+  color: #f4f4f5;
+}
+
+.account-form-group input {
+  padding: 12px 16px;
+  border: 1px solid #d5d5d8;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.account-form-group input:focus {
+  outline: none;
+  border-color: #2e8be8;
+  box-shadow: 0 0 0 3px rgba(46, 139, 232, 0.14);
+}
+
+.account-form-group input:disabled {
+  background: #f5f5f5;
+  color: #888;
+  cursor: not-allowed;
+}
+
+body.dark-mode .account-form-group input:disabled {
+  background: #27272a;
+  color: #666;
+}
+
+.profile-upload-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.profile-avatar-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f0f0f0;
+  border: 2px solid #e6e6ea;
+}
+
+body.dark-mode .profile-avatar-preview {
+  border-color: #3f3f46;
+  background: #27272a;
+}
+
+.profile-avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  border: 2px solid #e6e6ea;
+}
+
+body.dark-mode .profile-avatar-placeholder {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #71717a;
+}
+
+.upload-btn-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.upload-btn-wrapper input[type=file] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+  height: 100%;
+}
+
+.theme-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border: 1px solid #e6e6ea;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+body.dark-mode .theme-toggle-row {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
+.theme-toggle-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: #111;
+}
+
+.theme-toggle-info p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2e8be8;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+@media (max-width: 768px) {
+  .account-layout {
+    flex-direction: column;
+  }
+  .account-sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  .account-tab-btn {
+    white-space: nowrap;
+  }
+  .account-content {
+    padding: 24px;
+  }
+}
