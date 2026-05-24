@@ -38,10 +38,10 @@ public class User {
     @Column(nullable = false)
     private String role = "user";
 
-    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP")
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP")
     private Instant updatedAt;
 
     public User() {

@@ -16,16 +16,30 @@ Our platform highlights:
 
 ## 🚀 How to Try It Out (Pull the Code)
 
-If you want to pull this project and see it running on your own computer, it is super easy! Just follow these simple steps:
+Follow the **[Complete Setup Guide](SETUP.md)** to get Roomly running on your PC in 15 minutes.
 
-**1. Download the project to your computer**
-Open up your terminal or command prompt and type this to fetch the files:
+The guide includes:
+- ✅ Prerequisites (Java, Node.js, Maven)
+- ✅ Getting Supabase keys
+- ✅ Creating `.env.local` configuration
+- ✅ Running frontend + backend
+- ✅ Troubleshooting common issues
+
+**Quick Start:**
 ```bash
 git clone https://github.com/YlanDainne/Roomly.git
 cd Roomly/roomly
+cp .env.example .env.local
+# Fill in your Supabase keys in .env.local
+npm install
+cd backend && mvn install && cd ..
+npm start
+# In another terminal: .\run-backend.ps1
 ```
 
-**2. Get everything ready**
+See [SETUP.md](SETUP.md) for detailed instructions with screenshots and troubleshooting.
+
+**2. For existing developers**
 Next, tell your computer to prepare all the necessary pieces to run it:
 ```bash
 npm install

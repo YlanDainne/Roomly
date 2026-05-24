@@ -20,23 +20,50 @@ if (Test-Path $envFile) {
 $dbUrl = $env:SUPABASE_DB_URL
 if ($dbUrl) {
     try {
-        $dbHost = ([uri]$dbUrl).Host
-        if ($dbHost) {
-            try {
-                Resolve-DnsName $dbHost | Out-Null
+        $dbUri = [uri]($dbUrl -replace '^jdbc:', '')
+        if ($dbUri.Host -like '*.pooler.supabase.com') {
+            $poolerPort = if ($dbUri.Port -gt 0) { $dbUri.Port } else { 6543 }
+            $poolerPath = $dbUri.AbsolutePath.TrimStart('/')
+            if (-not $poolerPath) {
+                $poolerPath = 'postgres'
             }
-            catch {
-                throw @"
-Supabase database host could not be resolved: $dbHost
 
-Open Supabase Dashboard > Project Settings > Database > Connection string and verify the host.
-If direct PostgreSQL keeps failing, copy the pooler connection string instead and update SUPABASE_DB_URL in .env.local.
-"@
+            $poolerQuery = $dbUri.Query.TrimStart('?')
+            if (-not $poolerQuery) {
+                $poolerQuery = 'sslmode=require&preferQueryMode=simple&prepareThreshold=0&connectTimeout=30'
             }
+            elseif ($poolerQuery -notmatch '(^|&)connectTimeout=') {
+                $poolerQuery += '&connectTimeout=30'
+            }
+
+            $resolvedIp = $null
+            $resolvedAddresses = @('57.182.231.186') + (Resolve-DnsName -Name $dbUri.Host -Type A -ErrorAction Stop |
+                Where-Object { $_.IPAddress } |
+                Select-Object -ExpandProperty IPAddress) | Select-Object -Unique
+
+            foreach ($resolvedAddress in $resolvedAddresses) {
+                if (Test-NetConnection -ComputerName $resolvedAddress -Port $poolerPort -InformationLevel Quiet -WarningAction SilentlyContinue) {
+                    $resolvedIp = $resolvedAddress
+                    break
+                }
+            }
+
+            if (-not $resolvedIp) {
+                throw "Could not reach any resolved IP for Supabase pooler host $($dbUri.Host) on port $poolerPort."
+            }
+
+            $rewrittenUrl = "jdbc:postgresql://$resolvedIp`:$poolerPort/$poolerPath"
+            if ($poolerQuery) {
+                $rewrittenUrl += "?$poolerQuery"
+            }
+
+            [Environment]::SetEnvironmentVariable('SUPABASE_DB_URL', $rewrittenUrl)
+            $dbUrl = $rewrittenUrl
+            Write-Host "Using Supabase pooler IP $resolvedIp for local startup." -ForegroundColor Yellow
         }
     }
     catch {
-        throw "SUPABASE_DB_URL is not a valid PostgreSQL JDBC URL: $dbUrl"
+        throw "Unable to prepare a reachable Supabase database URL: $($_.Exception.Message)"
     }
 }
 

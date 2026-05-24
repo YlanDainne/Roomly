@@ -1,13 +1,109 @@
-# ⚡ Quick Start - Run Roomly Backend in 10 Minutes
+# ⚡ Quick Start Guide
 
-This guide gets you running the Supabase-integrated Roomly backend in 10 minutes.
+## 🆕 First Time Setup?
 
-## Prerequisites
+**👉 See [SETUP.md](SETUP.md)** for the complete step-by-step guide including:
+- Installing prerequisites (Java, Node.js, Maven)
+- Getting Supabase keys
+- Creating `.env.local` configuration
+- Database migrations
+- Troubleshooting
 
-Already installed:
-- ✅ Java 21 (in `C:\Users\Matebook D14 BE\.jdk\jdk-21.0.8`)
-- ✅ Maven 3.9.15 (in `C:\Users\Matebook D14 BE\.maven\maven-3.9.15`)
-- ✅ Supabase Account & Project
+---
+
+## ⚡ Quick Reference (For Existing Developers)
+
+### Prerequisites
+
+- ✅ Java 21, Maven 3.9+, Node.js, Git
+- ✅ `.env.local` file with Supabase keys configured
+- ✅ Supabase project already set up
+
+---
+
+### Running the Application
+
+**Terminal 1 - Backend:**
+```powershell
+.\run-backend.ps1
+```
+
+**Terminal 2 - Frontend:**
+```bash
+npm start
+```
+
+✅ Access at **http://localhost:3000** and **http://localhost:8080**
+
+---
+
+## 📁 Configuration
+
+Your `.env.local` should have:
+- `REACT_APP_SUPABASE_URL` - Supabase project URL
+- `REACT_APP_SUPABASE_ANON_KEY` - Public API key
+- `SUPABASE_DB_URL` - Database connection string
+- `SUPABASE_API_KEY` - Backend API key
+- `JWT_SECRET` - JWT secret for tokens
+
+See `.env.example` for all required variables.
+
+---
+
+## API Quick Reference
+
+### Admin Endpoints (role='admin' required)
+```
+GET  /api/admin/listings/pending
+PATCH /api/admin/listings/{id}/status
+DELETE /api/admin/listings/{id}
+```
+
+### User Endpoints
+```
+GET  /api/users/me
+GET  /api/listings
+POST /api/listings
+```
+
+---
+
+## 🔧 Common Tasks
+
+| Task | Command |
+|------|---------|
+| Check backend status | `curl http://localhost:8080/health` |
+| Restart backend | Stop script (Ctrl+C), run again |
+| Restart frontend | Stop (Ctrl+C) in npm terminal, `npm start` |
+| View database | `psql -h host -U postgres -d roomly` |
+
+---
+
+## ⚠️ Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Database connection error | Check `.env.local` keys are correct |
+| "Supabase not configured" | Restart frontend after editing `.env.local` |
+| Port in use | Change port in config files |
+| Maven/Java not found | Update paths in `run-backend.ps1` |
+
+See [SETUP.md - Troubleshooting](SETUP.md#-troubleshooting) for detailed solutions.
+
+---
+
+## 📚 Full Documentation
+
+- [SETUP.md](SETUP.md) - Complete setup for new developers
+- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Code structure & architecture
+- [ADMIN_QUICK_SETUP.md](ADMIN_QUICK_SETUP.md) - Admin panel guide
+- [README.md](README.md) - Project overview
+
+---
+
+## ⭐ Legacy Reference Below
+
+The sections below are the original quick start. Most information is now in [SETUP.md](SETUP.md).
 
 ---
 
